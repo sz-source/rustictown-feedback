@@ -334,11 +334,40 @@ function generateMock(){
   return data;
 }
 
-let allData=generateMock();
+const SHEET_URL='https://script.google.com/macros/s/AKfycbxWnX33voQ78WgYBeEC4fs-NZF7-T9RHDGd4t8BdixhSu6xLSZHFlLG2qF8PdU3Spo/exec';
+let allData=[];
 let filtered=allData;
+
+function loadFromSheet(){
+  fetch(SHEET_URL)
+    .then(r=>r.json())
+    .then(data=>{
+      allData=data.map(d=>{
+        const entry={program:d['프로그램']||'',date:(d['날짜']||'').split('T')[0]};
+        const map={q1:'사전안내',q2:'첫인상',q3:'업무공간',q4:'숙소',q5:'공용시설',q6:'콘텐츠',q7:'서비스',q8:'리프레쉬',q10:'타운지기',q9:'재방문'};
+        Object.keys(map).forEach(k=>{
+          entry[k]=Number(d[map[k]+'_점수'])||0;
+          entry[k+'_c']=d[map[k]+'_코멘트']||'';
+        });
+        entry.best=d['기억에남는순간']||'';
+        entry.improve=d['개선점']||'';
+        entry.message=d['러스틱타운에게']||'';
+        return entry;
+      });
+      filtered=allData;
+      applyFilter();
+    })
+    .catch(e=>{
+      console.log('시트 로딩 실패, 목업 데이터 사용:',e);
+      allData=generateMock();
+      filtered=allData;
+      applyFilter();
+    });
+}
 
 function init(){
   refreshProgramFilter();
+  loadFromSheet();
 }
 
 function applyFilter(){

@@ -602,12 +602,11 @@
 
     console.log('Survey Answers:', answers);
 
-    // TODO: Google Sheets 연동
-    // fetch('YOUR_GOOGLE_APPS_SCRIPT_URL', {
-    //   method: 'POST', mode: 'no-cors',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(answers)
-    // });
+    fetch('https://script.google.com/macros/s/AKfycbxWnX33voQ78WgYBeEC4fs-NZF7-T9RHDGd4t8BdixhSu6xLSZHFlLG2qF8PdU3Spo/exec', {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(answers)
+    });
 
     showStage('stage-ending');
   }
