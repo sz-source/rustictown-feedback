@@ -31,7 +31,7 @@
   .btn-download{
     background:var(--accent);border:none;color:#ffffff;
     font-family:inherit;font-size:16px;font-weight:bold;padding:6px 14px;
-    padding:5px 12px;cursor:pointer;transition:all 0.1s;
+    cursor:pointer;transition:all 0.1s;
   }
   .btn-download:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,50,122,0.3);}
 
@@ -204,6 +204,8 @@
 </div>
 
 <script>
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
 const AREAS = [
   {id:'q1',icon:'&#x1F4E8;',name:'사전 안내',stage:'출발 전'},
   {id:'q2',icon:'&#x1F6E4;&#xFE0F;',name:'첫인상',stage:'도착'},
@@ -390,7 +392,8 @@ function render(){
   if(filtered.length===0){
     document.getElementById('totalAvg').textContent='-';
     document.getElementById('areaList').innerHTML='<div class="no-comments">해당 조건의 데이터가 없습니다.</div>';
-    document.getElementById('openList').innerHTML='';
+    document.getElementById('openList').innerHTML='<div class="no-comments">해당 조건의 데이터가 없습니다.</div>';
+    document.getElementById('openCount').textContent='0건';
     return;
   }
   let allScores=[];
@@ -436,7 +439,7 @@ function render(){
     return `<div class="open-section">
       <div class="open-title">${oq.icon} ${oq.label} <span class="open-count">(${items.length}건)</span></div>
       <div class="open-list">
-        ${items.length?items.map(i=>`<div class="open-item">${i.text}<div class="open-meta">${i.prog} &middot; ${i.date}</div></div>`).join(''):'<div class="no-comments">응답 없음</div>'}
+        ${items.length?items.map(i=>`<div class="open-item">${esc(i.text)}<div class="open-meta">${esc(i.prog)} &middot; ${i.date}</div></div>`).join(''):'<div class="no-comments">응답 없음</div>'}
       </div>
     </div>`;
   }).join('');
@@ -454,7 +457,7 @@ function renderComments(comments,tier){
     const cls=c.score<=2?'cs-low':c.score<=4?'cs-mid':'cs-high';
     return `<div class="comment-item">
       <div class="comment-score ${cls}">${c.score}점</div>
-      <div><div class="comment-text">${c.text}</div><div class="comment-prog">${c.prog} &middot; ${c.date}</div></div>
+      <div><div class="comment-text">${esc(c.text)}</div><div class="comment-prog">${esc(c.prog)} &middot; ${c.date}</div></div>
     </div>`;
   }).join('');
 }
