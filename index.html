@@ -441,25 +441,12 @@
 
   function shareKakao() {
     Kakao.Share.sendDefault({
-      objectType: 'feed',
-      content: {
-        title: '모험 리포트 완성! 🎉',
-        description: '러스틱타운 포레스트캠프 리포트를 완료했어요!',
-        imageUrl: 'https://www.rustictown.co.kr/img/og-image.png',
-        link: {
-          mobileWebUrl: 'https://sz-source.github.io/rustictown-feedback/',
-          webUrl: 'https://sz-source.github.io/rustictown-feedback/'
-        }
-      },
-      buttons: [
-        {
-          title: '리포트 작성하기',
-          link: {
-            mobileWebUrl: 'https://sz-source.github.io/rustictown-feedback/',
-            webUrl: 'https://sz-source.github.io/rustictown-feedback/'
-          }
-        }
-      ]
+      objectType: 'text',
+      text: '리포트 제출 완료! ✨\n입주민의 소중한 모험이 기록되었어요.',
+      link: {
+        mobileWebUrl: 'https://www.rustictown.co.kr',
+        webUrl: 'https://www.rustictown.co.kr'
+      }
     });
   }
 
