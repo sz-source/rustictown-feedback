@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>러스틱타운 : 포레스트캠프 리포트</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Galmuri11&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg-primary: #1a1a2e; --bg-secondary: #16213e;
+    --accent: #ff2746; --accent-hover: #ff4d66;
+    --gold: #f9d423; --green: #6bcb77;
+    --text: #eaeaea; --text-dim: #a0a0b0; --pixel-border: #533483;
+  }
+  body {
+    font-family: 'Galmuri11', monospace, sans-serif;
+    background: var(--bg-primary); color: var(--text);
+    min-height: 100vh; display: flex; justify-content: center;
+    align-items: flex-start; padding: 40px 20px;
+  }
+  .survey-container { width: 100%; max-width: 720px; }
+  .pixel-box {
+    background: var(--bg-secondary); border: 4px solid var(--pixel-border);
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.3), inset 0 0 0 2px rgba(255,255,255,0.05);
+    padding: 40px;
+  }
+  .progress-container { margin-bottom: 30px; }
+  .progress-label { display:flex; justify-content:space-between; font-size:14px; color:var(--text-dim); margin-bottom:8px; }
+  .progress-bar { width:100%; height:12px; background:rgba(0,0,0,0.4); border:2px solid var(--pixel-border); overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--gold)); transition:width 0.5s ease; }
+  .progress-fill::after { content:''; display:block; width:100%; height:50%; background:rgba(255,255,255,0.2); }
+  .stage-badge { display:inline-block; background:var(--accent); color:white; padding:4px 16px; font-size:14px; font-weight:bold; letter-spacing:2px; margin-bottom:12px; border:2px solid rgba(255,255,255,0.2); }
+  .stage-title { font-size:24px; color:var(--gold); margin-bottom:8px; text-shadow:2px 2px 0 rgba(0,0,0,0.5); }
+  .stage-desc { font-size:16px; color:var(--text-dim); margin-bottom:30px; line-height:1.6; }
+  .npc-dialogue { display:flex; gap:16px; align-items:flex-start; margin-bottom:24px; padding:16px; background:rgba(0,0,0,0.2); border-left:4px solid var(--green); }
+  .npc-avatar { font-size:36px; flex-shrink:0; }
+  .npc-text { font-size:16px; line-height:1.7; }
+  .npc-name { font-size:14px; color:var(--green); margin-bottom:4px; font-weight:bold; }
+  .question-block { margin-bottom: 32px; }
+  .question-label { font-size:18px; margin-bottom:16px; line-height:1.5; display:flex; align-items:flex-start; gap:8px; }
+  .question-icon { font-size:18px; flex-shrink:0; }
+  .rating-group { display:flex; gap:8px; justify-content:center; }
+  .rating-btn {
+    width:64px; height:64px; background:rgba(0,0,0,0.3); border:3px solid var(--pixel-border);
+    cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    transition:all 0.15s; font-size:28px; gap:2px;
+  }
+  .rating-btn:hover { border-color:var(--gold); transform:translateY(-4px); background:rgba(249,212,35,0.1); }
+  .rating-btn.selected { border-color:var(--gold); background:rgba(249,212,35,0.2); box-shadow:0 0 12px rgba(249,212,35,0.3); }
+  .rating-btn .rating-num { font-size:14px; color:var(--text-dim); margin-top:2px; }
+  .rating-btn.selected .rating-num { color:var(--gold); }
+  .rating-labels { display:flex; justify-content:space-between; margin-top:8px; font-size:14px; color:var(--text-dim); padding:0 4px; }
+  .comment-line { margin-top: 14px; }
+  .comment-input {
+    width:100%; padding:10px 14px; background:rgba(0,0,0,0.2);
+    border:2px solid rgba(83,52,131,0.5); color:var(--text);
+    font-family:inherit; font-size:16px; line-height:1.5; transition:border-color 0.2s;
+  }
+  .comment-input:focus { outline:none; border-color:var(--gold); }
+  .comment-input::placeholder { color:var(--text-dim); opacity:0.5; font-size:14px; }
+  .followup {
+    margin-top:14px; padding:14px 16px;
+    background:rgba(0,0,0,0.15); border-left:3px solid var(--text-dim);
+    display:none; animation:fadeIn 0.3s ease;
+  }
+  .followup.visible { display:block; }
+  .followup.positive { border-left-color:var(--green); }
+  .followup.negative { border-left-color:var(--accent); }
+  .followup-label {
+    font-size:16px; margin-bottom:10px; line-height:1.5;
+  }
+  .followup.positive .followup-label { color:var(--green); }
+  .followup.negative .followup-label { color:var(--accent-hover); }
+  .pixel-textarea {
+    width:100%; padding:12px 16px; background:rgba(0,0,0,0.3);
+    border:3px solid var(--pixel-border); color:var(--text);
+    font-family:inherit; font-size:16px; resize:vertical; min-height:80px; line-height:1.6;
+  }
+  .pixel-textarea:focus { outline:none; border-color:var(--gold); }
+  .pixel-textarea::placeholder { color:var(--text-dim); opacity:0.6; }
+  .optional-tag { font-size:14px; color:var(--text-dim); background:rgba(255,255,255,0.05); padding:2px 8px; margin-left:8px; }
+  .btn-group { display:flex; justify-content:space-between; margin-top:36px; gap:12px; }
+  .btn { padding:12px 32px; font-family:inherit; font-size:16px; cursor:pointer; border:3px solid; transition:all 0.15s; font-weight:bold; letter-spacing:1px; }
+  .btn-prev { background:transparent; border-color:var(--text-dim); color:var(--text-dim); }
+  .btn-prev:hover { border-color:var(--text); color:var(--text); }
+  .btn-next { background:var(--accent); border-color:var(--accent); color:white; margin-left:auto; }
+  .btn-next:hover { background:var(--accent-hover); border-color:var(--accent-hover); transform:translateY(-2px); box-shadow:0 4px 12px rgba(233,69,96,0.4); }
+  .btn-submit { background:var(--green); border-color:var(--green); color:var(--bg-primary); margin-left:auto; font-size:18px; padding:14px 40px; }
+  .btn-submit:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(107,203,119,0.4); }
+  .intro-screen { text-align:center; padding:40px 20px; }
+  .intro-pixel-art { font-size:64px; margin-bottom:24px; animation:float 2s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .intro-title { font-size:24px; color:var(--gold); margin-bottom:12px; text-shadow:2px 2px 0 rgba(0,0,0,0.5); }
+  .intro-subtitle { font-size:16px; color:var(--text-dim); line-height:1.8; margin-bottom:32px; }
+  .intro-note { font-size:14px; color:var(--text-dim); margin-top:16px; opacity:0.7; }
+  .btn-start { background:var(--gold); border:3px solid var(--gold); color:var(--bg-primary); padding:16px 48px; font-family:inherit; font-size:18px; font-weight:bold; cursor:pointer; letter-spacing:2px; transition:all 0.15s; }
+  .btn-start:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(249,212,35,0.4); }
+  .ending-screen { text-align:center; padding:40px 20px; }
+  .ending-icon { font-size:72px; margin-bottom:20px; animation:bounce 0.6s ease-in-out infinite alternate; }
+  @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-12px)} }
+  .ending-title { font-size:24px; color:var(--gold); margin-bottom:12px; text-shadow:2px 2px 0 rgba(0,0,0,0.5); }
+  .ending-message { font-size:16px; line-height:1.8; margin-bottom:24px; }
+  .gift-box { background:rgba(249,212,35,0.1); border:3px solid var(--gold); padding:20px; margin-top:24px; }
+  .gift-box-title { color:var(--gold); font-size:18px; margin-bottom:8px; }
+  .gift-box-desc { color:var(--text-dim); font-size:16px; line-height:1.6; }
+  .stage { display:none; animation:fadeIn 0.4s ease; }
+  .stage.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @media (max-width:640px) {
+    .pixel-box { padding:24px 16px; }
+    .stage-title { font-size:18px; }
+    .rating-btn { width:52px; height:52px; font-size:22px; }
+    .btn { padding:10px 20px; font-size:14px; }
+    .intro-title { font-size:18px; }
+  }
+</style>
+</head>
+<body>
+<div class="survey-container">
+<div class="pixel-box">
+
+  <!-- INTRO -->
+  <div class="stage active" id="stage-intro">
+    <div class="intro-screen">
+      <div class="intro-pixel-art">&#x1F3F0;</div>
+      <div class="intro-title">소중한 이야기를 들려주세요.</div>
+      <div class="intro-subtitle">
+        모험을 되돌아보며 리포트를 작성해주세요.<br>
+        여러분의 솔직한 이야기가 러스틱타운을 더 좋게 만들어요.
+      </div>
+      <div style="margin-bottom:24px; text-align:left; max-width:360px; margin-left:auto; margin-right:auto;">
+        <div class="question-label" style="justify-content:center; margin-bottom:12px;"><span class="question-icon">&#x1F4DC;</span><span>참여한 프로그램을 선택해주세요.</span></div>
+        <select id="q-program" style="width:100%;max-width:360px;font-family:inherit;font-size:15px;padding:12px 16px;background:rgba(0,0,0,0.3);border:3px solid var(--pixel-border);color:var(--text);text-align:center;cursor:pointer;">
+          <option value="">선택해주세요</option>
+          <option value="같은 곳, 다른 리듬">같은 곳, 다른 리듬</option>
+          <option value="내일 말고 지금">내일 말고 지금</option>
+          <option value="내일은 숲으로 출근합니다.">내일은 숲으로 출근합니다.</option>
+          <option value="나를 위한 캐시삭제">나를 위한 캐시삭제</option>
+          <option value="To-Do-List는 잠시 휴식 중">To-Do-List는 잠시 휴식 중</option>
+          <option value="숲의 팔레트">숲의 팔레트</option>
+          <option value="파이프라인">파이프라인</option>
+          <option value="AI 돌리고 칼퇴">AI 돌리고 칼퇴</option>
+          <option value="기획서 찢고 나온 기획자">기획서 찢고 나온 기획자</option>
+          <option value="AI에게 물었더니 숲을 추천함">AI에게 물었더니 숲을 추천함</option>
+        </select>
+      </div>
+      <button class="btn-start" onclick="startFromIntro()">리포트 작성하기</button>
+      <div class="intro-note">&#x23F1; 약 5~7분 소요 &nbsp;|&nbsp; &#x1F512; 익명 응답</div>
+    </div>
+  </div>
+
+  <!-- STAGE 1: 출발 전 -->
+  <div class="stage" id="stage-1">
+    <div class="progress-container">
+      <div class="progress-label"><span>STAGE 1 &mdash; 출발 전</span><span>1 / 5</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:15%"></div></div>
+    </div>
+    <div class="npc-dialogue">
+      <div class="npc-avatar">&#x1F9D1;&#x200D;&#x1F33E;</div>
+      <div><div class="npc-name">타운지기</div><div class="npc-text">퀘스트를 떠나기 전, 저희가 보내드린 브리핑은 도움이 되셨나요?</div></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F4CB;</span><span>출발 전 안내는 충분했나요?</span></div>
+      <div class="rating-group" data-question="q1">
+        <button class="rating-btn" onclick="setRating('q1',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q1',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q1',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q1',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q1',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>아쉬웠어요</span><span>완벽했어요</span></div>
+      <div class="followup" id="followup-q1">
+        <div class="followup-label" id="followup-q1-label"></div>
+        <input type="text" class="comment-input" id="c1" placeholder="">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-prev" onclick="goStage('intro')">&#x25C0; 처음으로</button>
+      <button class="btn btn-next" onclick="goStage(2)">다음 &#x25B6;</button>
+    </div>
+  </div>
+
+  <!-- STAGE 2: 도착 -->
+  <div class="stage" id="stage-2">
+    <div class="progress-container">
+      <div class="progress-label"><span>STAGE 2 &mdash; 도착</span><span>2 / 5</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:35%"></div></div>
+    </div>
+    <div class="npc-dialogue">
+      <div class="npc-avatar">&#x1F3E1;</div>
+      <div><div class="npc-name">타운지기</div><div class="npc-text">러스틱타운에 도착했을 때의 느낌, 기억나시나요?</div></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F44B;</span><span>러스틱타운에 도착했을 때 첫인상은 어땠나요?</span></div>
+      <div class="rating-group" data-question="q2">
+        <button class="rating-btn" onclick="setRating('q2',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q2',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q2',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q2',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q2',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>기대 이하</span><span>기대 이상</span></div>
+      <div class="followup" id="followup-q2">
+        <div class="followup-label" id="followup-q2-label"></div>
+        <input type="text" class="comment-input" id="c2" placeholder="">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-prev" onclick="goStage(1)">&#x25C0; 이전</button>
+      <button class="btn btn-next" onclick="goStage(3)">다음 &#x25B6;</button>
+    </div>
+  </div>
+
+  <!-- STAGE 3: 모험 중 -->
+  <!-- STAGE 3: 모험 중 - 공간 -->
+  <div class="stage" id="stage-3">
+    <div class="progress-container">
+      <div class="progress-label"><span>STAGE 3 &mdash; 모험 중</span><span>3 / 5</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+    </div>
+    <div class="npc-dialogue">
+      <div class="npc-avatar">&#x1F3E0;</div>
+      <div><div class="npc-name">타운지기</div><div class="npc-text">러스틱타운에서 머문 공간들은 어떠셨나요?</div></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F4BB;</span><span>업무 공간은 어땠나요?</span></div>
+      <div class="rating-group" data-question="q3">
+        <button class="rating-btn" onclick="setRating('q3',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q3',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q3',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q3',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q3',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>불편했어요</span><span>최고였어요</span></div>
+      <div class="followup" id="followup-q3">
+        <div class="followup-label" id="followup-q3-label"></div>
+        <input type="text" class="comment-input" id="c3" placeholder="">
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F3E0;</span><span>숙소는 어땠나요?</span></div>
+      <div class="rating-group" data-question="q4">
+        <button class="rating-btn" onclick="setRating('q4',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q4',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q4',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q4',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q4',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>불편했어요</span><span>최고였어요</span></div>
+      <div class="followup" id="followup-q4">
+        <div class="followup-label" id="followup-q4-label"></div>
+        <input type="text" class="comment-input" id="c4" placeholder="">
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F37D;&#xFE0F;</span><span>공용 시설(공유주방, 세탁실 등)은 어땠나요?</span></div>
+      <div class="rating-group" data-question="q5">
+        <button class="rating-btn" onclick="setRating('q5',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q5',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q5',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q5',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q5',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>불편했어요</span><span>최고였어요</span></div>
+      <div class="followup" id="followup-q5">
+        <div class="followup-label" id="followup-q5-label"></div>
+        <input type="text" class="comment-input" id="c5" placeholder="">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-prev" onclick="goStage(2)">&#x25C0; 이전</button>
+      <button class="btn btn-next" onclick="goStage(4)">다음 &#x25B6;</button>
+    </div>
+  </div>
+
+  <!-- STAGE 4: 모험 중 - 서비스 -->
+  <div class="stage" id="stage-4">
+    <div class="progress-container">
+      <div class="progress-label"><span>STAGE 4 &mdash; 탐험 중</span><span>4 / 5</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:70%"></div></div>
+    </div>
+    <div class="npc-dialogue">
+      <div class="npc-avatar">&#x2694;&#xFE0F;</div>
+      <div><div class="npc-name">타운지기</div><div class="npc-text">콘텐츠와 서비스 경험도 들려주세요!</div></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F3AD;</span><span>세부 콘텐츠 프로그램은 어땠나요?</span></div>
+      <div class="rating-group" data-question="q6">
+        <button class="rating-btn" onclick="setRating('q6',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q6',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q6',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q6',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q6',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>아쉬웠어요</span><span>최고였어요</span></div>
+      <div class="followup" id="followup-q6">
+        <div class="followup-label" id="followup-q6-label"></div>
+        <input type="text" class="comment-input" id="c6" placeholder="">
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F6CE;&#xFE0F;</span><span>서비스(편의물품, 업무기기, 계절물품, 카셰어링, 여행자보험 등)는 어땠나요?</span></div>
+      <div class="rating-group" data-question="q7">
+        <button class="rating-btn" onclick="setRating('q7',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q7',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q7',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q7',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q7',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>아쉬웠어요</span><span>최고였어요</span></div>
+      <div class="followup" id="followup-q7">
+        <div class="followup-label" id="followup-q7-label"></div>
+        <input type="text" class="comment-input" id="c7" placeholder="">
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F525;</span><span>리프레쉬 활동(BBQ, 불멍, 보드게임 등)은 어땠나요?</span></div>
+      <div class="rating-group" data-question="q8">
+        <button class="rating-btn" onclick="setRating('q8',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q8',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q8',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q8',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q8',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>아쉬웠어요</span><span>최고였어요</span></div>
+      <div class="followup" id="followup-q8">
+        <div class="followup-label" id="followup-q8-label"></div>
+        <input type="text" class="comment-input" id="c8" placeholder="">
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F9D1;&#x200D;&#x1F33E;</span><span>타운지기 응대는 어떠셨나요?</span></div>
+      <div class="rating-group" data-question="q10">
+        <button class="rating-btn" onclick="setRating('q10',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q10',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q10',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q10',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q10',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>아쉬웠어요</span><span>최고였어요</span></div>
+      <div class="followup" id="followup-q10">
+        <div class="followup-label" id="followup-q10-label"></div>
+        <input type="text" class="comment-input" id="c10" placeholder="">
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-prev" onclick="goStage(3)">&#x25C0; 이전</button>
+      <button class="btn btn-next" onclick="goStage(5)">다음 &#x25B6;</button>
+    </div>
+  </div>
+
+  <!-- STAGE 5: 퀘스트 완료 -->
+  <div class="stage" id="stage-5">
+    <div class="progress-container">
+      <div class="progress-label"><span>STAGE 5 &mdash; 퀘스트 완료</span><span>5 / 5</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
+    </div>
+    <div class="npc-dialogue">
+      <div class="npc-avatar">&#x1F31F;</div>
+      <div><div class="npc-name">타운지기</div><div class="npc-text">거의 다 왔어요! 마지막으로 전체적인 이야기를 들려주세요.</div></div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F504;</span><span>다른 퀘스트에도 참여하고 싶으신가요?</span></div>
+      <div class="rating-group" data-question="q9">
+        <button class="rating-btn" onclick="setRating('q9',1)">&#x1F62D;<span class="rating-num">1</span></button>
+        <button class="rating-btn" onclick="setRating('q9',2)">&#x1F615;<span class="rating-num">2</span></button>
+        <button class="rating-btn" onclick="setRating('q9',3)">&#x1F610;<span class="rating-num">3</span></button>
+        <button class="rating-btn" onclick="setRating('q9',4)">&#x1F60A;<span class="rating-num">4</span></button>
+        <button class="rating-btn" onclick="setRating('q9',5)">&#x1F929;<span class="rating-num">5</span></button>
+      </div>
+      <div class="rating-labels"><span>글쎄요</span><span>꼭 다시 올게요</span></div>
+      <div class="followup" id="followup-q9">
+        <div class="followup-label" id="followup-q9-label"></div>
+        <input type="text" class="comment-input" id="c9" placeholder="">
+      </div>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F4AB;</span><span>가장 기억에 남는 순간은 무엇이었나요?</span></div>
+      <textarea class="pixel-textarea" id="q-best" placeholder="어떤 순간이 가장 좋았는지 자유롭게 적어주세요."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F527;</span><span>아쉬웠거나, 이것만은 꼭 바뀌었으면 하는 점이 있다면?</span></div>
+      <textarea class="pixel-textarea" id="q-improve" placeholder="솔직한 이야기일수록 큰 도움이 돼요."></textarea>
+    </div>
+
+    <div class="question-block">
+      <div class="question-label"><span class="question-icon">&#x1F4AC;</span><span>러스틱타운에게 전하고 싶은 말 <span class="optional-tag">선택</span></span></div>
+      <textarea class="pixel-textarea" id="q-message" placeholder="자유롭게 한마디 남겨주세요."></textarea>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-prev" onclick="goStage(4)">&#x25C0; 이전</button>
+      <button class="btn btn-submit" onclick="submitSurvey()">리포트 제출하기 &#x2705;</button>
+    </div>
+  </div>
+
+  <!-- ENDING -->
+  <div class="stage" id="stage-ending">
+    <div class="ending-screen">
+      <div class="ending-icon">&#x1F389;</div>
+      <div class="ending-title">모험 리포트 완성!</div>
+      <div class="ending-message">
+        입주민님의 소중한 이야기가 전달되었어요.<br>
+        더 좋은 러스틱타운을 만드는 데 큰 힘이 됩니다.<br>
+        다음 퀘스트에서 또 만나요!
+      </div>
+      <div class="gift-box">
+        <div class="gift-box-title">&#x1F381; 기프트 안내</div>
+        <div class="gift-box-desc">리포트 작성 감사합니다!<br>아래 공유하기 버튼을 눌러 타운지기에게 전달해주시면 기프트를 받으실 수 있어요.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+  const answers = {};
+
+  function showStage(id) {
+    document.querySelectorAll('.stage').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 각 스테이지별 필수 질문 매핑
+  const stageQuestions = {
+    1: ['q1'],
+    2: ['q2'],
+    3: ['q3','q4','q5'],
+    4: ['q6','q7','q8','q10'],
+    5: ['q9'],
+  };
+
+  function startFromIntro() {
+    const prog = document.getElementById('q-program').value;
+    if (!prog) {
+      document.getElementById('q-program').style.borderColor = 'var(--accent)';
+      document.getElementById('q-program').focus();
+      return;
+    }
+    document.getElementById('q-program').style.borderColor = '';
+    goStage(1);
+  }
+
+  function goStage(num) {
+    // 이전 버튼이나 인트로 이동은 검증 없이 허용
+    if (num === 'intro') { showStage('stage-intro'); return; }
+
+    // 현재 스테이지 번호 파악
+    const currentEl = document.querySelector('.stage.active');
+    const currentId = currentEl ? currentEl.id : '';
+    const currentNum = currentId === 'stage-intro' ? 0 : parseInt(currentId.replace('stage-',''));
+
+    // 이전 스테이지로 가는 경우 검증 스킵
+    if (num <= currentNum) { showStage('stage-' + num); return; }
+
+    // 다음으로 넘어갈 때 현재 스테이지 필수 질문 검증
+    const required = stageQuestions[currentNum] || [];
+    const missing = required.filter(q => !answers[q]);
+    if (missing.length > 0) {
+      missing.forEach(q => {
+        const group = document.querySelector(`.rating-group[data-question="${q}"]`);
+        if (group) {
+          group.style.outline = '3px solid var(--accent)';
+          group.style.outlineOffset = '4px';
+          setTimeout(() => { group.style.outline = ''; group.style.outlineOffset = ''; }, 2000);
+        }
+      });
+      return;
+    }
+
+    // 서술형 코멘트 검증 (이모지 선택 후 나타난 후속 질문)
+    let commentMissing = false;
+    required.forEach(q => {
+      const followup = document.getElementById('followup-' + q);
+      if (followup && followup.classList.contains('visible')) {
+        const input = followup.querySelector('.comment-input');
+        if (input && !input.value.trim()) {
+          input.style.outline = '3px solid var(--accent)';
+          input.style.outlineOffset = '2px';
+          input.focus();
+          setTimeout(() => { input.style.outline = ''; input.style.outlineOffset = ''; }, 2000);
+          commentMissing = true;
+        }
+      }
+    });
+    if (commentMissing) return;
+
+    showStage('stage-' + num);
+  }
+
+  // 질문별 점수 구간 멘트
+  const followupMessages = {
+    q1: {
+      low:  { label: '😢 어떤 정보가 부족했나요?', placeholder: '더 알았으면 좋았을 점을 알려주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '보완되면 좋을 점을 적어주세요.' },
+      high: { label: '😊 특히 도움이 됐던 안내가 있다면?', placeholder: '좋았던 점을 알려주시면 더 발전시킬게요!' },
+    },
+    q2: {
+      low:  { label: '😢 기대와 많이 달랐나요?', placeholder: '어떤 점이 가장 아쉬웠는지 알려주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '기대와 달랐던 부분을 적어주세요.' },
+      high: { label: '😊 첫인상에서 가장 좋았던 점은?', placeholder: '인상 깊었던 부분을 알려주세요!' },
+    },
+    q3: {
+      low:  { label: '😢 업무 공간에서 어떤 점이 불편했나요?', placeholder: '책상, 소음, 온도, 와이파이 등 자유롭게 적어주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '개선되면 좋을 부분을 알려주세요.' },
+      high: { label: '😊 업무 공간에서 가장 좋았던 점은?', placeholder: '마음에 들었던 부분을 알려주세요!' },
+    },
+    q4: {
+      low:  { label: '😢 숙소에서 어떤 점이 불편했나요?', placeholder: '침실, 청결, 온도, 어메니티 등 자유롭게 적어주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '개선되면 좋을 부분을 적어주세요.' },
+      high: { label: '😊 숙소에서 가장 편했던 점은?', placeholder: '좋았던 부분을 알려주세요!' },
+    },
+    q5: {
+      low:  { label: '😢 공용 시설에서 어떤 점이 불편했나요?', placeholder: '주방, 세탁실, 청결 등 자유롭게 적어주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '개선 포인트를 알려주세요.' },
+      high: { label: '😊 공용 시설에서 좋았던 점은?', placeholder: '마음에 들었던 부분을 알려주세요!' },
+    },
+    q6: {
+      low:  { label: '😢 콘텐츠에서 어떤 점이 아쉬웠나요?', placeholder: '기대에 못 미쳤던 콘텐츠가 있다면 알려주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '보완되면 좋을 부분을 적어주세요.' },
+      high: { label: '😊 가장 재밌었던 콘텐츠는?', placeholder: '인상 깊었던 콘텐츠를 알려주세요!' },
+    },
+    q7: {
+      low:  { label: '😢 서비스에서 어떤 점이 불편했나요?', placeholder: '이용한 서비스 중 아쉬웠던 점을 알려주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '보완되면 좋을 부분을 적어주세요.' },
+      high: { label: '😊 특히 좋았던 서비스가 있다면?', placeholder: '만족스러웠던 서비스를 알려주세요!' },
+    },
+    q8: {
+      low:  { label: '😢 리프레쉬 활동에서 아쉬웠던 점은?', placeholder: '이용한 활동 중 불편했던 점을 알려주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '보완되면 좋을 부분을 적어주세요.' },
+      high: { label: '😊 가장 즐거웠던 활동은?', placeholder: '재밌었던 활동을 알려주세요!' },
+    },
+    q9: {
+      low:  { label: '😢 재방문을 망설이게 하는 이유가 있다면?', placeholder: '솔직하게 알려주시면 개선에 큰 도움이 돼요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '기대하는 변화를 알려주세요.' },
+      high: { label: '😊 다음에 또 온다면 기대하는 점은?', placeholder: '다음 퀘스트에서 해보고 싶은 것을 알려주세요!' },
+    },
+    q10: {
+      low:  { label: '😢 응대에서 어떤 점이 아쉬웠나요?', placeholder: '문의 응대, 안내 등 아쉬웠던 점을 알려주세요.' },
+      mid:  { label: '🤔 조금 더 좋아지려면 어떤 점이 있을까요?', placeholder: '개선되면 좋을 부분을 알려주세요.' },
+      high: { label: '😊 특히 좋았던 응대가 있다면?', placeholder: '인상 깊었던 점을 알려주세요!' },
+    },
+  };
+
+  function setRating(question, value) {
+    answers[question] = value;
+    const group = document.querySelector(`.rating-group[data-question="${question}"]`);
+    const btns = group.querySelectorAll('.rating-btn');
+    btns.forEach((btn, idx) => {
+      btn.classList.toggle('selected', idx === value - 1);
+    });
+
+    // 조건부 후속 질문 표시
+    const followup = document.getElementById('followup-' + question);
+    if (followup && followupMessages[question]) {
+      const tier = value <= 2 ? 'low' : value <= 4 ? 'mid' : 'high';
+      const msg = followupMessages[question][tier];
+      const label = document.getElementById('followup-' + question + '-label');
+      const input = followup.querySelector('.comment-input');
+
+      label.textContent = msg.label;
+      input.placeholder = msg.placeholder;
+
+      followup.classList.remove('positive', 'negative');
+      followup.classList.add(value <= 3 ? 'negative' : 'positive');
+      followup.classList.add('visible');
+    }
+  }
+
+  function submitSurvey() {
+    // 프로그램명 수집
+    answers.program = document.getElementById('q-program').value;
+    // 한줄 코멘트 수집
+    for (let i = 1; i <= 9; i++) {
+      const el = document.getElementById('c' + i);
+      if (el && el.value) answers['comment_q' + i] = el.value;
+    }
+    // 서술형 수집
+    answers.best = document.getElementById('q-best').value;
+    answers.improve = document.getElementById('q-improve').value;
+    answers.message = document.getElementById('q-message').value;
+    answers.submitted_at = new Date().toISOString();
+
+    console.log('Survey Answers:', answers);
+
+    // TODO: Google Sheets 연동
+    // fetch('YOUR_GOOGLE_APPS_SCRIPT_URL', {
+    //   method: 'POST', mode: 'no-cors',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(answers)
+    // });
+
+    showStage('stage-ending');
+  }
+</script>
+</body>
+</html>

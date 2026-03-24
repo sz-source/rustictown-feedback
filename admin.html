@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>러스틱타운 피드백 대시보드</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  :root{
+    --bg:#f7f9fc;--card:#ffffff;--border:#dde3ed;
+    --text:#222222;--dim:#888;--accent:#00327a;
+    --green:#13b26b;--red:#ff2746;--orange:#ea580c;--blue:#00327a;
+  }
+  body{
+    font-family:'Pretendard',sans-serif;
+    background:var(--bg);color:var(--text);
+    padding:24px;line-height:1.6;
+  }
+  .wrap{max-width:1200px;margin:0 auto;}
+
+  /* HEADER */
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+  .title{font-size:24px;color:var(--accent);font-weight:bold;}
+  .filters{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .filter-select{
+    background:var(--card);border:2px solid var(--border);color:var(--text);
+    font-family:inherit;font-size:16px;padding:6px 10px;cursor:pointer;
+  }
+  .filter-select:focus{outline:none;border-color:var(--accent);}
+  .btn-download{
+    background:var(--accent);border:none;color:#ffffff;
+    font-family:inherit;font-size:16px;font-weight:bold;padding:6px 14px;
+    padding:5px 12px;cursor:pointer;transition:all 0.1s;
+  }
+  .btn-download:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,50,122,0.3);}
+
+  /* SUMMARY */
+  .summary{display:flex;gap:12px;margin-bottom:20px;}
+  .stat{
+    background:var(--card);border:2px solid var(--border);
+    padding:14px 20px;flex:1;min-width:120px;
+  }
+  .stat-label{font-size:18px;color:var(--dim);margin-bottom:4px;}
+  .stat-value{font-size:36px;font-weight:bold;color:var(--accent);}
+
+  /* TWO COLUMN LAYOUT */
+  .columns{display:flex;gap:16px;align-items:flex-start;}
+  .col-left{flex:1;min-width:0;}
+  .col-right{flex:1;min-width:0;}
+
+  /* SECTION HEADER */
+  .section-head{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);
+  }
+  .section-title{font-size:24px;color:var(--accent);font-weight:bold;}
+  .section-tag{font-size:14px;color:var(--dim);background:rgba(0,0,0,0.04);padding:2px 8px;}
+
+  /* AREA LIST */
+  .area{
+    background:var(--card);border:2px solid var(--border);
+    margin-bottom:8px;overflow:hidden;
+  }
+  .area-header{
+    display:flex;align-items:center;gap:8px;padding:10px 12px;
+    cursor:pointer;transition:background 0.1s;
+  }
+  .area-header:hover{background:rgba(0,0,0,0.02);}
+  .area-icon{font-size:20px;width:28px;text-align:center;}
+  .area-name{font-size:18px;flex:1;}
+  .area-stage{font-size:14px;color:var(--dim);}
+  .area-score{font-size:18px;font-weight:bold;min-width:36px;text-align:right;}
+  .score-high{color:var(--green);}
+  .score-mid{color:var(--orange);}
+  .score-low{color:var(--red);}
+  .area-bar-wrap{width:60px;height:6px;background:rgba(0,0,0,0.04);margin-left:6px;}
+  .area-bar{height:100%;transition:width 0.3s;}
+  .area-toggle{font-size:14px;color:var(--dim);transition:transform 0.2s;margin-left:4px;}
+  .area.open .area-toggle{transform:rotate(180deg);}
+
+  /* AREA DETAIL */
+  .area-detail{
+    display:none;padding:0 12px 10px;
+    border-top:1px solid rgba(0,0,0,0.04);
+  }
+  .area.open .area-detail{display:block;}
+  .comment-filters{display:flex;gap:3px;margin:8px 0 6px;flex-wrap:wrap;}
+  .cf-btn{
+    font-family:inherit;font-size:16px;padding:4px 12px;
+    background:transparent;border:2px solid var(--border);color:var(--dim);
+    cursor:pointer;transition:all 0.1s;
+  }
+  .cf-btn:hover,.cf-btn.active{border-color:var(--accent);color:var(--accent);}
+  .comment-list{max-height:240px;overflow-y:auto;}
+  .comment-item{
+    padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.06);
+    display:flex;gap:8px;align-items:flex-start;font-size:16px;
+  }
+  .comment-score{
+    font-size:16px;font-weight:bold;min-width:36px;text-align:center;
+    padding:2px 0;
+  }
+  .cs-high{background:rgba(22,163,74,0.1);color:var(--green);}
+  .cs-mid{background:rgba(234,88,12,0.1);color:var(--orange);}
+  .cs-low{background:rgba(220,38,38,0.1);color:var(--red);}
+  .comment-text{color:var(--text);line-height:1.5;flex:1;}
+  .comment-prog{font-size:14px;color:var(--dim);margin-top:2px;}
+  .no-comments{font-size:16px;color:var(--dim);padding:10px 0;}
+
+  /* OPEN-ENDED (RIGHT COLUMN) */
+  .open-section{margin-bottom:16px;}
+  .open-title{font-size:20px;margin-bottom:8px;display:flex;align-items:center;gap:5px;font-weight:bold;}
+  .open-count{font-size:14px;color:var(--dim);}
+  .open-list{max-height:280px;overflow-y:auto;}
+  .open-item{
+    padding:10px 12px;margin-bottom:4px;
+    background:rgba(0,0,0,0.02);border-left:3px solid var(--border);
+    font-size:16px;line-height:1.6;
+  }
+  .open-meta{font-size:14px;color:var(--dim);margin-top:3px;}
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);}
+
+  /* RESPONSIVE */
+  @media(max-width:768px){
+    .columns{flex-direction:column;}
+    body{padding:12px;}
+    .stat-value{font-size:22px;}
+    .area-bar-wrap{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="title">&#x1F4CA; 피드백 대시보드</div>
+    <div class="filters">
+      <select class="filter-select" id="filterYear" onchange="applyFilter()">
+        <option value="all">전체 연도</option>
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+      </select>
+      <select class="filter-select" id="filterProgram" onchange="applyFilter()">
+        <option value="all">전체 프로그램</option>
+      </select>
+      <input type="date" class="filter-select" id="filterStart" onchange="applyFilter()">
+      <input type="date" class="filter-select" id="filterEnd" onchange="applyFilter()">
+      <button class="btn-download" onclick="downloadCSV()">CSV &#x2B07;</button>
+      <button class="btn-download" onclick="toggleProgramMgr()" style="background:var(--border);color:var(--text);">&#x2699;&#xFE0F;</button>
+    </div>
+  </div>
+
+  <!-- PROGRAM MANAGER -->
+  <div id="progMgr" style="display:none;background:var(--card);border:2px solid var(--border);padding:20px;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-size:18px;font-weight:bold;color:var(--accent);">프로그램 관리</div>
+      <button onclick="toggleProgramMgr()" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;">&times;</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <input type="text" id="newProg" placeholder="새 프로그램명 입력" style="flex:1;padding:8px 12px;font-family:inherit;font-size:16px;border:2px solid var(--border);background:var(--bg);color:var(--text);">
+      <button onclick="addProgram()" style="padding:8px 16px;font-family:inherit;font-size:16px;font-weight:bold;background:var(--accent);color:#fff;border:none;cursor:pointer;">추가</button>
+    </div>
+    <div id="progList"></div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <div class="stat">
+      <div class="stat-label">총 응답 수</div>
+      <div class="stat-value" id="totalCount">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">전체 평균 점수</div>
+      <div class="stat-value" id="totalAvg">0.0</div>
+    </div>
+  </div>
+
+  <!-- TWO COLUMNS -->
+  <div class="columns">
+    <!-- LEFT: 영역별 평균점수 -->
+    <div class="col-left">
+      <div class="section-head">
+        <div class="section-title">영역별 평균점수</div>
+        <div class="section-tag">클릭 &#x2192; 코멘트</div>
+      </div>
+      <div id="areaList"></div>
+    </div>
+
+    <!-- RIGHT: 서술형 -->
+    <div class="col-right">
+      <div class="section-head">
+        <div class="section-title">서술형</div>
+        <div class="section-tag" id="openCount"></div>
+      </div>
+      <div id="openList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const AREAS = [
+  {id:'q1',icon:'&#x1F4E8;',name:'사전 안내',stage:'출발 전'},
+  {id:'q2',icon:'&#x1F6E4;&#xFE0F;',name:'첫인상',stage:'도착'},
+  {id:'q3',icon:'&#x1F4BB;',name:'업무 공간',stage:'모험 중'},
+  {id:'q4',icon:'&#x1F3E0;',name:'숙소',stage:'모험 중'},
+  {id:'q5',icon:'&#x1F37D;&#xFE0F;',name:'공용 시설',stage:'모험 중'},
+  {id:'q6',icon:'&#x1F3AD;',name:'세부 콘텐츠 프로그램',stage:'탐험 중'},
+  {id:'q7',icon:'&#x1F6CE;&#xFE0F;',name:'서비스',stage:'탐험 중'},
+  {id:'q8',icon:'&#x1F525;',name:'리프레쉬',stage:'탐험 중'},
+  {id:'q10',icon:'&#x1F9D1;&#x200D;&#x1F33E;',name:'타운지기 응대',stage:'탐험 중'},
+  {id:'q9',icon:'&#x1F504;',name:'재방문 의사',stage:'퀘스트 완료'},
+];
+
+const OPEN_QUESTIONS = [
+  {id:'best',icon:'&#x2B50;',label:'가장 기억에 남는 순간'},
+  {id:'improve',icon:'&#x1F527;',label:'아쉬웠거나 바뀌었으면 하는 점'},
+  {id:'message',icon:'&#x1F4AC;',label:'러스틱타운에게 전하고 싶은 말'},
+];
+
+const DEFAULT_PROGRAMS = [
+  '같은 곳, 다른 리듬','내일 말고 지금','내일은 숲으로 출근합니다.',
+  '나를 위한 캐시삭제','To-Do-List는 잠시 휴식 중','숲의 팔레트',
+  '파이프라인','AI 돌리고 칼퇴','기획서 찢고 나온 기획자','AI에게 물었더니 숲을 추천함'
+];
+
+// localStorage에서 프로그램 목록 로드
+function loadPrograms(){
+  const saved=localStorage.getItem('rt_programs');
+  if(saved) return JSON.parse(saved);
+  return DEFAULT_PROGRAMS.map(p=>({name:p,visible:true}));
+}
+function savePrograms(){ localStorage.setItem('rt_programs',JSON.stringify(programList)); }
+let programList=loadPrograms();
+const PROGRAMS=programList.filter(p=>p.visible).map(p=>p.name);
+
+function toggleProgramMgr(){
+  const el=document.getElementById('progMgr');
+  el.style.display=el.style.display==='none'?'block':'none';
+  if(el.style.display==='block') renderProgList();
+}
+
+function renderProgList(){
+  const el=document.getElementById('progList');
+  el.innerHTML=programList.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="flex:1;font-size:16px;${p.visible?'':'opacity:0.4;text-decoration:line-through;'}">${p.name}</span>
+      <button onclick="editProg(${i})" style="padding:4px 12px;font-family:inherit;font-size:14px;border:2px solid var(--border);background:var(--bg);color:var(--accent);cursor:pointer;">수정</button>
+      <button onclick="toggleProg(${i})" style="padding:4px 12px;font-family:inherit;font-size:14px;border:2px solid var(--border);background:${p.visible?'var(--bg)':'rgba(0,0,0,0.04)'};color:${p.visible?'var(--orange)':'var(--green)'};cursor:pointer;">
+        ${p.visible?'숨기기':'표시'}
+      </button>
+    </div>
+  `).join('');
+}
+
+function addProgram(){
+  const input=document.getElementById('newProg');
+  const name=input.value.trim();
+  if(!name) return;
+  if(programList.find(p=>p.name===name)){alert('이미 존재하는 프로그램입니다.');return;}
+  programList.push({name:name,visible:true});
+  savePrograms();
+  input.value='';
+  renderProgList();
+  refreshProgramFilter();
+}
+
+function toggleProg(i){
+  programList[i].visible=!programList[i].visible;
+  savePrograms();
+  renderProgList();
+  refreshProgramFilter();
+}
+
+function editProg(i){
+  const newName=prompt('프로그램명 수정',programList[i].name);
+  if(!newName||!newName.trim())return;
+  programList[i].name=newName.trim();
+  savePrograms();
+  renderProgList();
+  refreshProgramFilter();
+}
+
+function refreshProgramFilter(){
+  const ps=document.getElementById('filterProgram');
+  const current=ps.value;
+  ps.innerHTML='<option value="all">전체 프로그램</option>';
+  programList.filter(p=>p.visible).forEach(p=>{
+    const o=document.createElement('option');o.value=p.name;o.textContent=p.name;ps.appendChild(o);
+  });
+  ps.value=current;
+  applyFilter();
+}
+
+function generateMock(){
+  const data=[];
+  const comments = {
+    q1:{low:['오는 길 안내가 부족했어요','준비물 목록이 늦게 왔어요','교통편 정보가 더 있었으면'],mid:['대체로 괜찮았는데 일정이 좀 늦게 왔어요','오픈채팅방 안내가 조금 더 빨랐으면'],high:['카톡 안내가 정말 친절했어요','꼼꼼한 사전 안내 덕에 준비가 수월했어요']},
+    q2:{low:['주차장에서 건물까지 안내가 없었어요'],mid:['생각보다 산속이라 놀랐어요','도착 후 동선이 좀 헷갈렸어요'],high:['자연환경이 기대 이상이었어요','도착하자마자 힐링됐어요','첫인상이 정말 좋았어요']},
+    q3:{low:['와이파이가 자주 끊겼어요','의자가 불편했어요'],mid:['조금 더 좋아지려면 모니터 크기가 컸으면','난방이 살짝 아쉬웠어요'],high:['집중하장이 정말 좋았어요','포레스트뷰 보면서 일하니 능률이 올랐어요','업무 환경이 서울 코워킹보다 나았어요']},
+    q4:{low:['온수가 잘 안 나왔어요'],mid:['침구가 조금 더 두꺼웠으면','방음이 살짝 아쉬워요'],high:['한옥 독채 분위기가 최고였어요','숙소가 깨끗하고 아늑했어요','코리빙하우스 거실이 좋았어요']},
+    q5:{low:['세탁기 대기 시간이 길었어요'],mid:['공유주방 조리도구가 좀 더 다양했으면','전자레인지가 하나 더 있으면 좋겠어요'],high:['밥먹장 시설이 잘 되어있어요','BBQ테라스 뷰가 최고!']},
+    q6:{low:['콘텐츠 시간이 너무 길었어요'],mid:['아이스브레이킹이 조금 어색했어요','자유시간이 더 있었으면'],high:['모닥모닥 시간이 인생 최고 경험','콘텐츠가 알차고 의미있었어요']},
+    q7:{low:['카셰어링 예약이 불편했어요'],mid:['대여 물품 종류가 더 다양했으면','반납 절차가 간편했으면'],high:['캠핑의자 대여가 너무 좋았어요','카셰어링 서비스가 정말 편리했어요']},
+    q8:{low:['불멍키트 가격이 좀 비싸요'],mid:['보드게임 종류가 더 많았으면','불멍 시간이 더 길었으면'],high:['불멍하면서 별 본 게 최고였어요','BBQ 너무 재밌었어요','보드게임으로 팀원들과 친해졌어요']},
+    q10:{low:['응답이 느렸어요'],mid:['저녁 시간에도 상주했으면'],high:['타운지기분들이 정말 친절했어요','조이님 히루님 최고!','세심하게 챙겨주셔서 감동']},
+    q9:{low:['가격 대비 고민이 돼요'],mid:['기간이 다양했으면','시간이 되면 다시 오고 싶어요'],high:['무조건 다시 올게요!','주변에도 추천하고 싶어요','벌써 다음 퀘스트가 기대돼요']},
+  };
+  const bestComments=['불멍하면서 별 보던 밤','모닥모닥에서 나눈 깊은 대화','포레스트뷰 보면서 일하던 시간','BBQ하면서 다같이 웃었던 저녁','숲에서 산책하며 영감 받은 순간','아침에 일어나서 본 풍경','집중하장에서 몰입했던 오후','팀원들과 보드게임 한 밤'];
+  const improveComments=['와이파이 속도 개선','숙소 방음 보완','세탁기 추가 설치','카셰어링 예약 시스템 간소화','불멍키트 가격 조정','공유주방 조리도구 보충','의자 업그레이드','안내 자료 더 일찍 발송','',''];
+  const msgComments=['타운지기분들 최고입니다!','정말 좋은 경험이었어요 감사합니다','다음에도 꼭 올게요','힐링하고 갑니다','','조이님 히루님 감사해요!',''];
+
+  for(let i=0;i<24;i++){
+    const prog=PROGRAMS[Math.floor(Math.random()*PROGRAMS.length)];
+    const date=new Date(2026,Math.floor(Math.random()*3),Math.floor(Math.random()*28)+1);
+    const entry={program:prog,date:date.toISOString().split('T')[0]};
+    AREAS.forEach(a=>{
+      const score=Math.floor(Math.random()*5)+1;
+      entry[a.id]=score;
+      const tier=score<=2?'low':score<=4?'mid':'high';
+      const pool=comments[a.id]?comments[a.id][tier]:[];
+      entry[a.id+'_c']=pool.length?pool[Math.floor(Math.random()*pool.length)]:'';
+    });
+    entry.best=bestComments[Math.floor(Math.random()*bestComments.length)];
+    entry.improve=improveComments[Math.floor(Math.random()*improveComments.length)];
+    entry.message=msgComments[Math.floor(Math.random()*msgComments.length)];
+    data.push(entry);
+  }
+  return data;
+}
+
+let allData=generateMock();
+let filtered=allData;
+
+function init(){
+  refreshProgramFilter();
+}
+
+function applyFilter(){
+  const year=document.getElementById('filterYear').value;
+  const prog=document.getElementById('filterProgram').value;
+  const start=document.getElementById('filterStart').value;
+  const end=document.getElementById('filterEnd').value;
+  filtered=allData.filter(d=>{
+    if(year!=='all'&&!d.date.startsWith(year))return false;
+    if(prog!=='all'&&d.program!==prog)return false;
+    if(start&&d.date<start)return false;
+    if(end&&d.date>end)return false;
+    return true;
+  });
+  render();
+}
+
+function render(){
+  document.getElementById('totalCount').textContent=filtered.length;
+  if(filtered.length===0){
+    document.getElementById('totalAvg').textContent='-';
+    document.getElementById('areaList').innerHTML='<div class="no-comments">해당 조건의 데이터가 없습니다.</div>';
+    document.getElementById('openList').innerHTML='';
+    return;
+  }
+  let allScores=[];
+  AREAS.forEach(a=>{filtered.forEach(d=>{if(d[a.id])allScores.push(d[a.id]);});});
+  const totalAvg=(allScores.reduce((s,v)=>s+v,0)/allScores.length).toFixed(1);
+  document.getElementById('totalAvg').textContent=totalAvg;
+
+  // LEFT: Areas
+  const areaHTML=AREAS.map(a=>{
+    const scores=filtered.map(d=>d[a.id]).filter(v=>v);
+    const avg=scores.length?(scores.reduce((s,v)=>s+v,0)/scores.length).toFixed(1):'-';
+    const pct=scores.length?((avg/5)*100):0;
+    const cls=avg>=4.0?'score-high':avg>=3.0?'score-mid':'score-low';
+    const barCls=avg>=4.0?'var(--green)':avg>=3.0?'var(--orange)':'var(--red)';
+    const comments=filtered.map(d=>({score:d[a.id],text:d[a.id+'_c'],prog:d.program,date:d.date})).filter(c=>c.text);
+
+    return `<div class="area" id="area-${a.id}">
+      <div class="area-header" onclick="toggleArea('${a.id}')">
+        <div class="area-icon">${a.icon}</div>
+        <div class="area-name">${a.name} <span class="area-stage">${a.stage}</span></div>
+        <div class="area-score ${cls}">${avg}</div>
+        <div class="area-bar-wrap"><div class="area-bar" style="width:${pct}%;background:${barCls};"></div></div>
+        <div class="area-toggle">&#x25BC;</div>
+      </div>
+      <div class="area-detail">
+        <div class="comment-filters">
+          <button class="cf-btn active" onclick="filterComments('${a.id}','all',this)">전체 (${comments.length})</button>
+          <button class="cf-btn" onclick="filterComments('${a.id}','low',this)">1~2점</button>
+          <button class="cf-btn" onclick="filterComments('${a.id}','mid',this)">3~4점</button>
+          <button class="cf-btn" onclick="filterComments('${a.id}','high',this)">5점</button>
+        </div>
+        <div class="comment-list" id="comments-${a.id}">
+          ${renderComments(comments,'all')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('areaList').innerHTML=areaHTML;
+
+  // RIGHT: Open-ended
+  const openHTML=OPEN_QUESTIONS.map(oq=>{
+    const items=filtered.map(d=>({text:d[oq.id],prog:d.program,date:d.date})).filter(i=>i.text);
+    return `<div class="open-section">
+      <div class="open-title">${oq.icon} ${oq.label} <span class="open-count">(${items.length}건)</span></div>
+      <div class="open-list">
+        ${items.length?items.map(i=>`<div class="open-item">${i.text}<div class="open-meta">${i.prog} &middot; ${i.date}</div></div>`).join(''):'<div class="no-comments">응답 없음</div>'}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('openList').innerHTML=openHTML;
+  document.getElementById('openCount').textContent=`${filtered.length}건`;
+}
+
+function renderComments(comments,tier){
+  let list=comments;
+  if(tier==='low')list=comments.filter(c=>c.score<=2);
+  else if(tier==='mid')list=comments.filter(c=>c.score>=3&&c.score<=4);
+  else if(tier==='high')list=comments.filter(c=>c.score>=5);
+  if(!list.length)return '<div class="no-comments">해당 점수대 코멘트 없음</div>';
+  return list.map(c=>{
+    const cls=c.score<=2?'cs-low':c.score<=4?'cs-mid':'cs-high';
+    return `<div class="comment-item">
+      <div class="comment-score ${cls}">${c.score}점</div>
+      <div><div class="comment-text">${c.text}</div><div class="comment-prog">${c.prog} &middot; ${c.date}</div></div>
+    </div>`;
+  }).join('');
+}
+
+function toggleArea(id){
+  document.getElementById('area-'+id).classList.toggle('open');
+}
+
+function filterComments(areaId,tier,btn){
+  const area=AREAS.find(a=>a.id===areaId);
+  const comments=filtered.map(d=>({score:d[area.id],text:d[area.id+'_c'],prog:d.program,date:d.date})).filter(c=>c.text);
+  document.getElementById('comments-'+areaId).innerHTML=renderComments(comments,tier);
+  btn.parentElement.querySelectorAll('.cf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function downloadCSV(){
+  if(!filtered.length)return alert('다운로드할 데이터가 없습니다.');
+  const headers=['날짜','프로그램',...AREAS.flatMap(a=>[a.name+' 점수',a.name+' 코멘트']),...OPEN_QUESTIONS.map(o=>o.label)];
+  const rows=filtered.map(d=>[
+    d.date,d.program,
+    ...AREAS.flatMap(a=>[d[a.id]||'','"'+(d[a.id+'_c']||'').replace(/"/g,'""')+'"']),
+    ...OPEN_QUESTIONS.map(o=>'"'+(d[o.id]||'').replace(/"/g,'""')+'"')
+  ]);
+  const bom='\uFEFF';
+  const csv=bom+[headers.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='rustictown-feedback-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();URL.revokeObjectURL(url);
+}
+
+init();
+</script>
+</body>
+</html>
