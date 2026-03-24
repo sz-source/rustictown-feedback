@@ -437,11 +437,15 @@
 
   function shareKakao() {
     Kakao.Share.sendDefault({
-      objectType: 'text',
-      text: '리포트 제출 완료! ✨\n입주민의 소중한 모험이 기록되었어요.',
-      link: {
-        mobileWebUrl: 'https://www.rustictown.co.kr',
-        webUrl: 'https://www.rustictown.co.kr'
+      objectType: 'feed',
+      content: {
+        title: '리포트 제출 완료! ⭐',
+        description: '입주민의 소중한 모험이 기록되었어요.',
+        imageUrl: 'https://sz-source.github.io/rustictown-feedback/share-complete.png',
+        link: {
+          mobileWebUrl: 'https://www.rustictown.co.kr',
+          webUrl: 'https://www.rustictown.co.kr'
+        }
       }
     });
   }
