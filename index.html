@@ -31,9 +31,6 @@
   .progress-bar { width:100%; height:12px; background:rgba(0,0,0,0.4); border:2px solid var(--pixel-border); overflow:hidden; }
   .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--gold)); transition:width 0.5s ease; }
   .progress-fill::after { content:''; display:block; width:100%; height:50%; background:rgba(255,255,255,0.2); }
-  .stage-badge { display:inline-block; background:var(--accent); color:white; padding:4px 16px; font-size:14px; font-weight:bold; letter-spacing:2px; margin-bottom:12px; border:2px solid rgba(255,255,255,0.2); }
-  .stage-title { font-size:24px; color:var(--gold); margin-bottom:8px; text-shadow:2px 2px 0 rgba(0,0,0,0.5); }
-  .stage-desc { font-size:16px; color:var(--text-dim); margin-bottom:30px; line-height:1.6; }
   .npc-dialogue { display:flex; gap:16px; align-items:flex-start; margin-bottom:24px; padding:16px; background:rgba(0,0,0,0.2); border-left:4px solid var(--green); }
   .npc-avatar { font-size:36px; flex-shrink:0; }
   .npc-text { font-size:16px; line-height:1.7; }
@@ -110,7 +107,6 @@
   @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
   @media (max-width:640px) {
     .pixel-box { padding:24px 16px; }
-    .stage-title { font-size:18px; }
     .rating-btn { width:52px; height:52px; font-size:22px; }
     .btn { padding:10px 20px; font-size:14px; }
     .intro-title { font-size:18px; }
@@ -605,6 +601,46 @@
   }
 
   function submitSurvey() {
+    // Stage 5 검증 - 재방문 이모지 필수
+    if (!answers.q9) {
+      const group = document.querySelector('.rating-group[data-question="q9"]');
+      if (group) {
+        group.style.outline = '3px solid var(--accent)';
+        group.style.outlineOffset = '4px';
+        setTimeout(() => { group.style.outline = ''; group.style.outlineOffset = ''; }, 2000);
+      }
+      return;
+    }
+    // 재방문 코멘트 필수
+    const followupQ9 = document.getElementById('followup-q9');
+    if (followupQ9 && followupQ9.classList.contains('visible')) {
+      const inputQ9 = followupQ9.querySelector('.comment-input');
+      if (inputQ9 && !inputQ9.value.trim()) {
+        inputQ9.style.outline = '3px solid var(--accent)';
+        inputQ9.style.outlineOffset = '2px';
+        inputQ9.focus();
+        setTimeout(() => { inputQ9.style.outline = ''; inputQ9.style.outlineOffset = ''; }, 2000);
+        return;
+      }
+    }
+    // 서술형 필수 (기억에 남는 순간, 개선점)
+    const best = document.getElementById('q-best');
+    if (!best.value.trim()) {
+      best.style.outline = '3px solid var(--accent)';
+      best.style.outlineOffset = '2px';
+      best.focus();
+      setTimeout(() => { best.style.outline = ''; best.style.outlineOffset = ''; }, 2000);
+      return;
+    }
+    const improve = document.getElementById('q-improve');
+    if (!improve.value.trim()) {
+      improve.style.outline = '3px solid var(--accent)';
+      improve.style.outlineOffset = '2px';
+      improve.focus();
+      setTimeout(() => { improve.style.outline = ''; improve.style.outlineOffset = ''; }, 2000);
+      return;
+    }
+
     // 프로그램명 수집
     answers.program = document.getElementById('q-program').value;
     // 한줄 코멘트 수집
@@ -612,6 +648,9 @@
       const el = document.getElementById('c' + i);
       if (el && el.value) answers['comment_q' + i] = el.value;
     }
+    // q10 (타운지기 응대) 코멘트
+    const c10 = document.getElementById('c10');
+    if (c10 && c10.value) answers['comment_q10'] = c10.value;
     // 서술형 수집
     answers.best = document.getElementById('q-best').value;
     answers.improve = document.getElementById('q-improve').value;
