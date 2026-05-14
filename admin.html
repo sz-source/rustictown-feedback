@@ -231,15 +231,16 @@ const DEFAULT_PROGRAMS = [
   '파이프라인','AI 돌리고 칼퇴','기획서 찢고 나온 기획자','AI에게 물었더니 숲을 추천함'
 ];
 
-// localStorage에서 프로그램 목록 로드
+// localStorage에서 프로그램 목록 로드 (구버전 객체 배열은 자동 마이그레이션)
 function loadPrograms(){
   const saved=localStorage.getItem('rt_programs');
-  if(saved) return JSON.parse(saved);
-  return DEFAULT_PROGRAMS.map(p=>({name:p,visible:true}));
+  if(!saved) return [...DEFAULT_PROGRAMS];
+  const arr=JSON.parse(saved);
+  return arr.map(p=>typeof p==='string'?p:p.name);
 }
 function savePrograms(){ localStorage.setItem('rt_programs',JSON.stringify(programList)); }
 let programList=loadPrograms();
-const PROGRAMS=programList.filter(p=>p.visible).map(p=>p.name);
+const PROGRAMS=programList;
 
 function toggleProgramMgr(){
   const el=document.getElementById('progMgr');
@@ -249,40 +250,45 @@ function toggleProgramMgr(){
 
 function renderProgList(){
   const el=document.getElementById('progList');
-  el.innerHTML=programList.map((p,i)=>`
+  el.innerHTML=programList.map((name,i)=>`
     <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
-      <span style="flex:1;font-size:16px;${p.visible?'':'opacity:0.4;text-decoration:line-through;'}">${p.name}</span>
+      <span style="flex:1;font-size:16px;">${esc(name)}</span>
       <button onclick="editProg(${i})" style="padding:4px 12px;font-family:inherit;font-size:14px;border:2px solid var(--border);background:var(--bg);color:var(--accent);cursor:pointer;">수정</button>
-      <button onclick="toggleProg(${i})" style="padding:4px 12px;font-family:inherit;font-size:14px;border:2px solid var(--border);background:${p.visible?'var(--bg)':'rgba(0,0,0,0.04)'};color:${p.visible?'var(--orange)':'var(--green)'};cursor:pointer;">
-        ${p.visible?'숨기기':'표시'}
-      </button>
+      <button onclick="deleteProg(${i})" style="padding:4px 12px;font-family:inherit;font-size:14px;border:2px solid var(--red);background:var(--bg);color:var(--red);cursor:pointer;">삭제</button>
     </div>
   `).join('');
+}
+
+function deleteProg(i){
+  const name=programList[i];
+  const count=allData.filter(d=>d.program===name).length;
+  let msg=`'${name}' 프로그램명을 목록에서 삭제할까요?`;
+  if(count>0){
+    msg+=`\n\n⚠️ 이 프로그램으로 받은 응답이 ${count}건 있습니다.\n응답 데이터(점수·코멘트)는 그대로 보존되며,\n"전체 프로그램" 필터로는 계속 조회 가능합니다.\n다만 프로그램별 필터 드롭다운에서는 사라집니다.`;
+  }
+  if(!confirm(msg))return;
+  programList.splice(i,1);
+  savePrograms();
+  renderProgList();
+  refreshProgramFilter();
 }
 
 function addProgram(){
   const input=document.getElementById('newProg');
   const name=input.value.trim();
   if(!name) return;
-  if(programList.find(p=>p.name===name)){alert('이미 존재하는 프로그램입니다.');return;}
-  programList.push({name:name,visible:true});
+  if(programList.includes(name)){alert('이미 존재하는 프로그램입니다.');return;}
+  programList.push(name);
   savePrograms();
   input.value='';
   renderProgList();
   refreshProgramFilter();
 }
 
-function toggleProg(i){
-  programList[i].visible=!programList[i].visible;
-  savePrograms();
-  renderProgList();
-  refreshProgramFilter();
-}
-
 function editProg(i){
-  const newName=prompt('프로그램명 수정',programList[i].name);
+  const newName=prompt('프로그램명 수정',programList[i]);
   if(!newName||!newName.trim())return;
-  programList[i].name=newName.trim();
+  programList[i]=newName.trim();
   savePrograms();
   renderProgList();
   refreshProgramFilter();
@@ -292,8 +298,8 @@ function refreshProgramFilter(){
   const ps=document.getElementById('filterProgram');
   const current=ps.value;
   ps.innerHTML='<option value="all">전체 프로그램</option>';
-  programList.filter(p=>p.visible).forEach(p=>{
-    const o=document.createElement('option');o.value=p.name;o.textContent=p.name;ps.appendChild(o);
+  programList.forEach(name=>{
+    const o=document.createElement('option');o.value=name;o.textContent=name;ps.appendChild(o);
   });
   ps.value=current;
   applyFilter();
