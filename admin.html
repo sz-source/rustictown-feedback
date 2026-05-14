@@ -231,12 +231,17 @@ const DEFAULT_PROGRAMS = [
   '파이프라인','AI 돌리고 칼퇴','기획서 찢고 나온 기획자','AI에게 물었더니 숲을 추천함'
 ];
 
-// localStorage에서 프로그램 목록 로드 (구버전 객체 배열은 자동 마이그레이션)
+// localStorage에서 프로그램 목록 로드 (구버전 객체 배열은 자동 마이그레이션, 숨김 처리된 항목은 제거)
 function loadPrograms(){
   const saved=localStorage.getItem('rt_programs');
   if(!saved) return [...DEFAULT_PROGRAMS];
   const arr=JSON.parse(saved);
-  return arr.map(p=>typeof p==='string'?p:p.name);
+  if(arr.length && typeof arr[0]!=='string'){
+    const migrated=arr.filter(p=>p.visible!==false).map(p=>p.name);
+    localStorage.setItem('rt_programs',JSON.stringify(migrated));
+    return migrated;
+  }
+  return arr;
 }
 function savePrograms(){ localStorage.setItem('rt_programs',JSON.stringify(programList)); }
 let programList=loadPrograms();
