@@ -432,6 +432,29 @@
 <script>
   Kakao.init('0e51331132e9022a6e47f5ccc669c14d');
 
+  const FEEDBACK_API = 'https://script.google.com/macros/s/AKfycbxWnX33voQ78WgYBeEC4fs-NZF7-T9RHDGd4t8BdixhSu6xLSZHFlLG2qF8PdU3Spo/exec';
+
+  // Apps Script에서 최신 프로그램 목록 받아 드롭다운 갱신 (실패 시 HTML의 기본 목록 그대로 사용)
+  async function loadProgramsFromServer(){
+    try {
+      const res = await fetch(FEEDBACK_API + '?action=programs');
+      const programs = await res.json();
+      if (Array.isArray(programs) && programs.length > 0) {
+        const select = document.getElementById('q-program');
+        while (select.options.length > 1) select.remove(1);
+        programs.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          select.appendChild(opt);
+        });
+      }
+    } catch(e) {
+      console.log('프로그램 목록 로드 실패, 기본 목록 사용:', e);
+    }
+  }
+  loadProgramsFromServer();
+
   function shareKakao() {
     Kakao.Share.sendDefault({
       objectType: 'text',
@@ -657,7 +680,7 @@
 
     console.log('Survey Answers:', answers);
 
-    fetch('https://script.google.com/macros/s/AKfycbxWnX33voQ78WgYBeEC4fs-NZF7-T9RHDGd4t8BdixhSu6xLSZHFlLG2qF8PdU3Spo/exec', {
+    fetch(FEEDBACK_API, {
       method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(answers)

@@ -225,27 +225,30 @@ const OPEN_QUESTIONS = [
   {id:'message',icon:'&#x1F4AC;',label:'러스틱타운에게 전하고 싶은 말'},
 ];
 
-const DEFAULT_PROGRAMS = [
-  '기획서 찢고 나온 기획자','AI에게 물었더니 숲을 추천함',
-  '마감이 코 앞','시작의 순간','찐케이션2',
-  '로그오프 데이','딥 포레스트','흐름을 찾아서'
-];
+// 프로그램 목록은 Apps Script에서 관리 (PropertiesService)
+let programList = [];
 
-// localStorage에서 프로그램 목록 로드 (구버전 객체 배열은 자동 마이그레이션, 숨김 처리된 항목은 제거)
-function loadPrograms(){
-  const saved=localStorage.getItem('rt_programs');
-  if(!saved) return [...DEFAULT_PROGRAMS];
-  const arr=JSON.parse(saved);
-  if(arr.length && typeof arr[0]!=='string'){
-    const migrated=arr.filter(p=>p.visible!==false).map(p=>p.name);
-    localStorage.setItem('rt_programs',JSON.stringify(migrated));
-    return migrated;
+async function loadProgramsFromServer(){
+  try {
+    const res = await fetch(SHEET_URL + '?action=programs');
+    const data = await res.json();
+    if (Array.isArray(data)) programList = data;
+  } catch(e) {
+    console.log('프로그램 목록 로드 실패:', e);
+    programList = [];
   }
-  return arr;
 }
-function savePrograms(){ localStorage.setItem('rt_programs',JSON.stringify(programList)); }
-let programList=loadPrograms();
-const PROGRAMS=programList;
+
+async function callServer(action, payload){
+  const res = await fetch(SHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({action: action}, payload || {}))
+  });
+  const data = await res.json();
+  if (data && Array.isArray(data.programs)) programList = data.programs;
+  return data;
+}
 
 function toggleProgramMgr(){
   const el=document.getElementById('progMgr');
@@ -264,7 +267,7 @@ function renderProgList(){
   `).join('');
 }
 
-function deleteProg(i){
+async function deleteProg(i){
   const name=programList[i];
   const count=allData.filter(d=>d.program===name).length;
   let msg=`'${name}' 프로그램명을 목록에서 삭제할까요?`;
@@ -272,29 +275,27 @@ function deleteProg(i){
     msg+=`\n\n⚠️ 이 프로그램으로 받은 응답이 ${count}건 있습니다.\n응답 데이터(점수·코멘트)는 그대로 보존되며,\n"전체 프로그램" 필터로는 계속 조회 가능합니다.\n다만 프로그램별 필터 드롭다운에서는 사라집니다.`;
   }
   if(!confirm(msg))return;
-  programList.splice(i,1);
-  savePrograms();
+  await callServer('deleteProgram', {name: name});
   renderProgList();
   refreshProgramFilter();
 }
 
-function addProgram(){
+async function addProgram(){
   const input=document.getElementById('newProg');
   const name=input.value.trim();
   if(!name) return;
   if(programList.includes(name)){alert('이미 존재하는 프로그램입니다.');return;}
-  programList.push(name);
-  savePrograms();
+  await callServer('addProgram', {name: name});
   input.value='';
   renderProgList();
   refreshProgramFilter();
 }
 
-function editProg(i){
-  const newName=prompt('프로그램명 수정',programList[i]);
-  if(!newName||!newName.trim())return;
-  programList[i]=newName.trim();
-  savePrograms();
+async function editProg(i){
+  const oldName=programList[i];
+  const newName=prompt('프로그램명 수정', oldName);
+  if(!newName||!newName.trim()||newName.trim()===oldName)return;
+  await callServer('updateProgram', {oldName: oldName, newName: newName.trim()});
   renderProgList();
   refreshProgramFilter();
 }
@@ -329,7 +330,7 @@ function generateMock(){
   const msgComments=['타운지기분들 최고입니다!','정말 좋은 경험이었어요 감사합니다','다음에도 꼭 올게요','힐링하고 갑니다','','조이님 히루님 감사해요!',''];
 
   for(let i=0;i<24;i++){
-    const prog=PROGRAMS[Math.floor(Math.random()*PROGRAMS.length)];
+    const prog=programList[Math.floor(Math.random()*programList.length)];
     const date=new Date(2026,Math.floor(Math.random()*3),Math.floor(Math.random()*28)+1);
     const entry={program:prog,date:date.toISOString().split('T')[0]};
     AREAS.forEach(a=>{
@@ -378,7 +379,8 @@ function loadFromSheet(){
     });
 }
 
-function init(){
+async function init(){
+  await loadProgramsFromServer();
   refreshProgramFilter();
   loadFromSheet();
 }
