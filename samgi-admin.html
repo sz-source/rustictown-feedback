@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>러스틱타운 삼기점 피드백 대시보드</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f7f9fc;--card:#fff;--border:#dde3ed;--text:#222;--dim:#888;
+  --accent:#00327a;--green:#13b26b;--red:#ff2746;--orange:#ea580c;
+}
+body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);padding:24px;line-height:1.6;}
+.wrap{max-width:1200px;margin:0 auto;}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:12px;}
+.title{font-size:24px;color:var(--accent);font-weight:bold;}
+.eyebrow{font-size:13px;color:var(--dim);margin-bottom:16px;}
+.filters{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.seg{display:flex;border:2px solid var(--border);border-radius:6px;overflow:hidden;}
+.seg button{font-family:inherit;font-size:15px;padding:6px 14px;background:var(--card);border:none;color:var(--dim);cursor:pointer;}
+.seg button.active{background:var(--accent);color:#fff;font-weight:bold;}
+.btn-download{background:var(--accent);border:none;color:#fff;font-family:inherit;font-size:15px;font-weight:bold;padding:8px 14px;border-radius:6px;cursor:pointer;}
+.btn-download:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,50,122,.3);}
+.summary{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.stat{background:var(--card);border:2px solid var(--border);border-radius:8px;padding:14px 20px;flex:1;min-width:130px;}
+.stat-label{font-size:15px;color:var(--dim);margin-bottom:4px;}
+.stat-value{font-size:34px;font-weight:bold;color:var(--accent);}
+.stat-sub{font-size:14px;color:var(--dim);font-weight:normal;}
+.columns{display:flex;gap:16px;align-items:flex-start;}
+.col-left,.col-right{flex:1;min-width:0;}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border);}
+.section-title{font-size:20px;color:var(--accent);font-weight:bold;}
+.section-tag{font-size:13px;color:var(--dim);background:rgba(0,0,0,.04);padding:2px 8px;border-radius:4px;}
+.area{background:var(--card);border:2px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;}
+.area-header{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;}
+.area-header:hover{background:rgba(0,0,0,.02);}
+.area-icon{font-size:20px;width:28px;text-align:center;}
+.area-name{font-size:16px;flex:1;}
+.area-n{font-size:13px;color:var(--dim);}
+.area-score{font-size:18px;font-weight:bold;min-width:36px;text-align:right;}
+.score-high{color:var(--green);}.score-mid{color:var(--orange);}.score-low{color:var(--red);}
+.area-bar-wrap{width:60px;height:6px;background:rgba(0,0,0,.05);border-radius:3px;margin-left:6px;}
+.area-bar{height:100%;border-radius:3px;transition:width .3s;}
+.area-toggle{font-size:13px;color:var(--dim);transition:transform .2s;margin-left:4px;}
+.area.open .area-toggle{transform:rotate(180deg);}
+.area-detail{display:none;padding:0 12px 10px;border-top:1px solid rgba(0,0,0,.05);}
+.area.open .area-detail{display:block;}
+.comment-filters{display:flex;gap:4px;margin:8px 0 6px;flex-wrap:wrap;}
+.cf-btn{font-family:inherit;font-size:14px;padding:3px 10px;background:transparent;border:2px solid var(--border);border-radius:5px;color:var(--dim);cursor:pointer;}
+.cf-btn:hover,.cf-btn.active{border-color:var(--accent);color:var(--accent);}
+.comment-list{max-height:260px;overflow-y:auto;}
+.comment-item{padding:7px 0;border-bottom:1px solid rgba(0,0,0,.06);display:flex;gap:8px;align-items:flex-start;font-size:15px;}
+.comment-score{font-size:14px;font-weight:bold;min-width:34px;text-align:center;padding:2px 0;border-radius:4px;}
+.cs-high{background:rgba(19,178,107,.1);color:var(--green);}
+.cs-mid{background:rgba(234,88,12,.1);color:var(--orange);}
+.cs-low{background:rgba(255,39,70,.1);color:var(--red);}
+.comment-text{color:var(--text);line-height:1.5;flex:1;}
+.comment-meta{font-size:13px;color:var(--dim);margin-top:2px;}
+.no-comments{font-size:14px;color:var(--dim);padding:10px 0;}
+.open-section{margin-bottom:16px;}
+.open-title{font-size:17px;margin-bottom:8px;display:flex;align-items:center;gap:5px;font-weight:bold;}
+.open-count{font-size:13px;color:var(--dim);font-weight:normal;}
+.open-list{max-height:300px;overflow-y:auto;}
+.open-item{padding:10px 12px;margin-bottom:5px;background:rgba(0,0,0,.02);border-left:3px solid var(--border);border-radius:0 6px 6px 0;font-size:15px;line-height:1.6;}
+.open-meta{font-size:13px;color:var(--dim);margin-top:3px;}
+.badge{font-size:12px;padding:1px 7px;border-radius:10px;font-weight:bold;}
+.badge-l{background:#eef4ff;color:var(--accent);}
+.badge-m{background:#eafaf0;color:var(--green);}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+@media(max-width:768px){.columns{flex-direction:column;}body{padding:12px;}.area-bar-wrap{display:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <div class="title">📊 삼기점 피드백 대시보드</div>
+    </div>
+    <div class="filters">
+      <div class="seg" id="trackSeg">
+        <button class="active" data-t="all" onclick="setTrack('all',this)">전체</button>
+        <button data-t="담당자" onclick="setTrack('담당자',this)">담당자</button>
+        <button data-t="참여자" onclick="setTrack('참여자',this)">참여자</button>
+      </div>
+      <button class="btn-download" onclick="downloadCSV()">CSV ⬇</button>
+    </div>
+  </div>
+  <div class="eyebrow">한국동서발전 러케이션 · 파일럿 피드백</div>
+
+  <div class="summary">
+    <div class="stat"><div class="stat-label">총 응답 수</div><div class="stat-value" id="totalCount">0</div>
+      <div class="stat-sub" id="trackBreak"></div></div>
+    <div class="stat"><div class="stat-label">전체 평균 점수</div><div class="stat-value" id="totalAvg">-</div>
+      <div class="stat-sub">5점 만점 · 해당없음 제외</div></div>
+  </div>
+
+  <div class="columns">
+    <div class="col-left">
+      <div class="section-head"><div class="section-title">영역별 평균점수</div><div class="section-tag">클릭 → 코멘트</div></div>
+      <div id="areaList"></div>
+    </div>
+    <div class="col-right">
+      <div class="section-head"><div class="section-title">서술형</div><div class="section-tag" id="openCount"></div></div>
+      <div id="openList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyI2pRgA71k6EGTBpzFIInMq2PalhMu-T-gIbPqepFoeBKJWkm15kT8ZPsI0enlXTYj/exec";
+const OPEN_COLS = ['가장 좋았던 순간','꼭 바뀌었으면','전하고 싶은 말'];
+const OPEN_META = {'가장 좋았던 순간':{icon:'⭐'},'꼭 바뀌었으면':{icon:'🔧'},'전하고 싶은 말':{icon:'💬'}};
+const AREA_ICON = {'문의·예약 응대':'📨','사전 일정 설계':'🗓️','첫인상':'🚪','업무 공간':'💻','숙소':'🏠','라운지':'☕','대규모 동선':'🧭','식사 환경':'🍽️','위스피릿 체험':'🥃','목적 달성':'🎯','비용 대비 가치':'💰','재이용 의향':'🔄','재방문 의향':'🔄'};
+
+function esc(s){const d=document.createElement('div');d.textContent=(s==null?'':String(s));return d.innerHTML;}
+function dateOf(r){return String(r['제출시각']||'').split('T')[0];}
+function trackOf(r){return r._track||r['역할']||'';}
+function tierClass(a){return a>=4?'score-high':a>=3?'score-mid':'score-low';}
+function tierColor(a){return a>=4?'var(--green)':a>=3?'var(--orange)':'var(--red)';}
+
+let all=[], filtered=[], track='all';
+
+function load(){
+  fetch(ENDPOINT).then(r=>r.json()).then(d=>{
+    all=[]
+      .concat((d['담당자']||[]).map(r=>Object.assign({_track:'담당자'},r)))
+      .concat((d['참여자']||[]).map(r=>Object.assign({_track:'참여자'},r)));
+    apply();
+  }).catch(e=>{
+    document.getElementById('areaList').innerHTML='<div class="no-comments">데이터를 불러오지 못했습니다. ('+esc(e.message)+')</div>';
+  });
+}
+function setTrack(t,btn){track=t;document.querySelectorAll('#trackSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');apply();}
+function apply(){filtered = track==='all'?all:all.filter(r=>trackOf(r)===track);render();}
+
+// 필터된 행에서 "○○ 점수" 컬럼(=영역)을 등장 순서대로 수집
+function areaKeys(){
+  const seen=[],set=new Set();
+  filtered.forEach(r=>Object.keys(r).forEach(k=>{
+    if(k.endsWith(' 점수')&&!set.has(k)){set.add(k);seen.push(k);}
+  }));
+  return seen.map(k=>k.replace(/ 점수$/,''));
+}
+function scoresOf(area){
+  return filtered.map(r=>Number(r[area+' 점수'])).filter(v=>v>=1&&v<=5);
+}
+function commentsOf(area){
+  return filtered.map(r=>({score:Number(r[area+' 점수']),text:r[area+' 서술'],track:trackOf(r),date:dateOf(r)}))
+                 .filter(c=>c.text&&String(c.text).trim());
+}
+
+function render(){
+  document.getElementById('totalCount').textContent=filtered.length;
+  const nL=all.filter(r=>trackOf(r)==='담당자').length, nM=all.filter(r=>trackOf(r)==='참여자').length;
+  document.getElementById('trackBreak').textContent='담당자 '+nL+' · 참여자 '+nM;
+
+  if(!filtered.length){
+    document.getElementById('totalAvg').textContent='-';
+    document.getElementById('areaList').innerHTML='<div class="no-comments">아직 응답이 없습니다.</div>';
+    document.getElementById('openList').innerHTML='<div class="no-comments">아직 응답이 없습니다.</div>';
+    document.getElementById('openCount').textContent='0건';
+    return;
+  }
+  const areas=areaKeys();
+  let allS=[];
+  areas.forEach(a=>allS=allS.concat(scoresOf(a)));
+  document.getElementById('totalAvg').textContent = allS.length?(allS.reduce((s,v)=>s+v,0)/allS.length).toFixed(1):'-';
+
+  document.getElementById('areaList').innerHTML = areas.map(a=>{
+    const sc=scoresOf(a), avg=sc.length?(sc.reduce((s,v)=>s+v,0)/sc.length):0;
+    const avgT=sc.length?avg.toFixed(1):'-', pct=sc.length?(avg/5*100):0;
+    const cm=commentsOf(a);
+    return `<div class="area" id="area-${esc(a)}">
+      <div class="area-header" onclick="toggleArea('${esc(a)}')">
+        <div class="area-icon">${AREA_ICON[a]||'📊'}</div>
+        <div class="area-name">${esc(a)} <span class="area-n">n=${sc.length}</span></div>
+        <div class="area-score ${tierClass(avg)}">${avgT}</div>
+        <div class="area-bar-wrap"><div class="area-bar" style="width:${pct}%;background:${tierColor(avg)};"></div></div>
+        <div class="area-toggle">▼</div>
+      </div>
+      <div class="area-detail">
+        <div class="comment-filters">
+          <button class="cf-btn active" onclick="filterC('${esc(a)}','all',this)">전체 (${cm.length})</button>
+          <button class="cf-btn" onclick="filterC('${esc(a)}','low',this)">1~2점</button>
+          <button class="cf-btn" onclick="filterC('${esc(a)}','mid',this)">3~4점</button>
+          <button class="cf-btn" onclick="filterC('${esc(a)}','high',this)">5점</button>
+        </div>
+        <div class="comment-list" id="cl-${esc(a)}">${renderC(cm,'all')}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('openList').innerHTML = OPEN_COLS.map(col=>{
+    const items=filtered.map(r=>({text:r[col],track:trackOf(r),date:dateOf(r)})).filter(i=>i.text&&String(i.text).trim());
+    return `<div class="open-section">
+      <div class="open-title">${(OPEN_META[col]||{}).icon||'💬'} ${esc(col)} <span class="open-count">(${items.length}건)</span></div>
+      <div class="open-list">${items.length?items.map(i=>`<div class="open-item">${esc(i.text)}<div class="open-meta"><span class="badge ${i.track==='담당자'?'badge-l':'badge-m'}">${i.track}</span> · ${i.date}</div></div>`).join(''):'<div class="no-comments">응답 없음</div>'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('openCount').textContent=filtered.length+'건';
+}
+
+function renderC(cm,tier){
+  let list=cm;
+  if(tier==='low')list=cm.filter(c=>c.score<=2);
+  else if(tier==='mid')list=cm.filter(c=>c.score>=3&&c.score<=4);
+  else if(tier==='high')list=cm.filter(c=>c.score>=5);
+  if(!list.length)return '<div class="no-comments">해당 점수대 코멘트 없음</div>';
+  return list.map(c=>{
+    const cls=c.score<=2?'cs-low':c.score<=4?'cs-mid':'cs-high';
+    return `<div class="comment-item"><div class="comment-score ${cls}">${c.score||'-'}점</div>
+      <div><div class="comment-text">${esc(c.text)}</div><div class="comment-meta"><span class="badge ${c.track==='담당자'?'badge-l':'badge-m'}">${c.track}</span> · ${c.date}</div></div></div>`;
+  }).join('');
+}
+function toggleArea(a){document.getElementById('area-'+a).classList.toggle('open');}
+function filterC(a,tier,btn){
+  document.getElementById('cl-'+a).innerHTML=renderC(commentsOf(a),tier);
+  btn.parentElement.querySelectorAll('.cf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function downloadCSV(){
+  if(!filtered.length)return alert('내보낼 데이터가 없습니다.');
+  const cols=Object.keys(filtered.reduce((a,r)=>Object.assign(a,r),{})).filter(k=>k!=='_track');
+  const head=['역할',...cols];
+  const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const rows=filtered.map(r=>[trackOf(r),...cols.map(c=>r[c])].map(q).join(','));
+  const csv='﻿'+[head.map(q).join(','),...rows].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download='삼기점-피드백-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+}
+load();
+</script>
+</body>
+</html>
