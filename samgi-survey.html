@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>러스틱타운 삼기점 · 러케이션 리포트</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/quiple/galmuri/dist/galmuri.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+/* ── 삼기(러케이션) 팔레트 = 러스틱타운 DESIGN.md SSOT ── */
+:root{
+  --blue:#00327a; --red:#ff2746; --ink:#222; --mut:#7A828C;
+  --line:#E6E8EC; --paper:#fff; --bg:#f7f9fc;
+  --pix:'Galmuri11','Galmuri14',monospace; --sans:'Pretendard',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;
+  min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
+.wrap{width:100%;max-width:600px}
+.pix{font-family:var(--pix);letter-spacing:.5px}
+h1.pix{font-size:22px;color:var(--blue);text-shadow:1px 0 0 currentColor;line-height:1.5}
+.stage-title{font-family:var(--pix);font-size:16px;color:var(--blue);text-shadow:.6px 0 0 currentColor}
+.eyebrow{font-size:13px;font-weight:700;color:var(--mut);letter-spacing:.5px}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:8px;
+  box-shadow:5px 5px 0 rgba(0,0,50,.10);padding:28px 24px}
+.hero{position:relative;border:3px solid var(--ink);border-radius:8px;overflow:hidden;
+  background:linear-gradient(135deg,#00214f,#00327a 60%,#0a4a9e);margin-bottom:-14px;
+  padding:34px 24px 40px;text-align:center;box-shadow:5px 5px 0 rgba(0,0,50,.10)}
+.hero .firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffe98a;
+  box-shadow:0 0 8px 2px #ffe98a99;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-8px);opacity:.9}}
+.hero .wmark{position:relative;font-family:var(--pix);color:#ffe98a;font-size:11px;letter-spacing:3px;margin-bottom:10px}
+.hero .htitle{position:relative;font-family:var(--pix);color:#fff;font-size:24px;text-shadow:1px 1px 0 #00214f;line-height:1.4}
+.sub{color:var(--mut);font-size:15px;margin:12px 0 20px}
+.meta{text-align:center;color:var(--mut);font-size:13px;margin-top:16px}
+.npc{display:flex;gap:12px;align-items:flex-start;background:var(--bg);
+  border:2px solid var(--line);border-radius:8px;padding:14px 16px;margin:18px 0}
+.npc .face{font-size:26px;flex:none;line-height:1.2}
+.npc .say{font-size:15px}
+.npc .say b{font-family:var(--pix);font-size:12px;color:var(--blue);display:block;margin-bottom:3px;text-shadow:.4px 0 0 currentColor}
+.cushion{border-left:3px solid var(--red);background:#fff5f6;border-radius:0 6px 6px 0;
+  padding:14px 16px;font-size:14px;color:#7a2530;margin:16px 0;line-height:1.65}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 8px}
+.role{border:3px solid var(--line);border-radius:8px;padding:18px 12px;text-align:center;cursor:pointer;transition:.15s;background:#fff}
+.role:hover{border-color:var(--blue)}
+.role.on{border-color:var(--blue);background:#eef4ff}
+.role .ic{font-size:24px}
+.role .rt{font-size:15px;font-weight:700;color:var(--blue);margin-top:8px}
+.btn{width:100%;border:3px solid var(--ink);border-radius:8px;padding:14px;cursor:pointer;
+  font-family:var(--pix);font-size:15px;text-shadow:.4px 0 0 currentColor;box-shadow:4px 4px 0 rgba(0,0,50,.15);transition:.1s}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 rgba(0,0,50,.15)}
+.btn.cta{background:var(--red);color:#fff;border-color:#c11a30}
+.btn.cta:disabled{background:#f3b8c1;border-color:#e8a3ae;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--blue)}
+.progress{display:flex;gap:6px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.progress i{width:20px;height:8px;border-radius:4px;background:var(--line);display:block}
+.progress i.on{background:var(--blue)}
+/* 질문 블록 */
+.qblock{padding:22px 0}
+.qblock+.qblock{border-top:1px solid var(--line)}
+.qblock.na{opacity:.5}
+.qblock.invalid .scale{outline:2px solid var(--red);outline-offset:5px;border-radius:12px}
+.q{font-size:18px;font-weight:600;margin:0 0 18px}
+.scale{display:flex;justify-content:space-between;gap:6px}
+.scale button{flex:1;border:2px solid var(--line);border-radius:10px;background:#fff;padding:12px 0;font-size:26px;cursor:pointer;transition:.12s}
+.scale button:hover{border-color:var(--blue)}
+.scale button.on{border-color:var(--blue);background:#eef4ff;transform:translateY(-3px)}
+.scale button span{display:block;font-family:var(--pix);font-size:12px;color:var(--mut);margin-top:4px}
+.anchor{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-top:8px}
+textarea{width:100%;border:2px solid var(--line);border-radius:8px;padding:12px;font-family:var(--sans);font-size:15px;resize:vertical;min-height:74px;margin-top:8px}
+textarea:focus{outline:none;border-color:var(--blue)}
+.followup{margin-top:16px;display:none}
+.followup.show{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.followup label{font-size:15px;font-weight:600;display:block}
+.dunno{display:block;text-align:center;font-size:13px;color:var(--mut);margin-top:12px;text-decoration:underline;cursor:pointer;background:none;border:none;width:100%}
+.dunno.on{color:var(--blue);font-weight:700}
+.warn{color:var(--red);font-size:13px;font-weight:600;text-align:center;margin-top:14px}
+.nav{display:flex;gap:10px;margin-top:20px}
+.nav .btn{flex:1}
+.hide{display:none}
+.done{text-align:center;padding:40px 24px}
+.done .big{font-size:44px}
+.gift{border:2px dashed var(--red);border-radius:8px;padding:14px;margin-top:20px;font-size:14px;color:#7a2530}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ── 인트로 ── -->
+  <section id="intro">
+    <div class="hero">
+      <span class="firefly" style="left:16%;top:28%"></span>
+      <span class="firefly" style="left:80%;top:60%;animation-delay:1.2s"></span>
+      <div class="wmark">RUSTIC TOWN · 삼기점</div>
+      <div class="htitle">러케이션 리포트</div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">한국동서발전 러케이션</div>
+      <h1 class="pix" style="margin-top:8px">소중한 이야기를 들려주세요</h1>
+      <p class="sub">이번 러케이션을 되돌아보며 리포트를 작성해주세요.<br>여러분의 솔직한 이야기가 러스틱타운 삼기점을 더 좋게 만듭니다.</p>
+      <div class="npc"><div class="face">🧑‍🌾</div>
+        <div class="say"><b>타운지기</b>이번 러케이션을 함께한 여러분의 이야기가 궁금해요. 편하게, 5분이면 됩니다.</div></div>
+      <div class="cushion">🌱 삼기점은 이제 막 문을 연 <b>파일럿 공간</b>입니다. 아직 다듬어지지 않아 불편하셨던 부분이 분명 있었을 텐데, <b>그 아쉬움까지 솔직하게</b> 들려주시는 것이 저희에겐 가장 큰 도움이 됩니다. 부족했던 점을 편하게 적어주실수록 다음 팀의 경험이 확실히 나아집니다.</div>
+      <div style="font-size:15px;font-weight:700;color:var(--blue)">📋 어떤 입장에서 답해주시나요?</div>
+      <div class="roles">
+        <div class="role" data-role="lead" onclick="pickRole(this)"><div class="ic">📋</div><div class="rt">기획·예약 담당자</div></div>
+        <div class="role" data-role="member" onclick="pickRole(this)"><div class="ic">👥</div><div class="rt">워크숍 참여 구성원</div></div>
+      </div>
+      <button class="btn cta" id="startBtn" disabled onclick="start()" style="margin-top:16px">리포트 작성하기</button>
+      <div class="meta">⏱ 약 5분 소요 &nbsp;|&nbsp; 🔒 익명 응답</div>
+    </div>
+  </section>
+
+  <!-- ── 문항 ── -->
+  <section id="quiz" class="hide">
+    <div class="progress" id="stamps"></div>
+    <div class="card">
+      <div class="stage-title" id="stageTitle"></div>
+      <div class="npc"><div class="face">🧑‍🌾</div><div class="say"><b>타운지기</b><span id="npcSay"></span></div></div>
+      <div id="questions"></div>
+      <div id="warn" class="warn hide"></div>
+      <div class="nav">
+        <button class="btn ghost" id="prevBtn" onclick="prev()">◀ 이전</button>
+        <button class="btn cta" id="nextBtn" onclick="next()">다음 ▶</button>
+      </div>
+    </div>
+    <div class="meta"><span id="stageNow">1</span> / <span id="stageTotal">5</span> · 🔒 익명</div>
+  </section>
+
+  <!-- ── 완료 ── -->
+  <section id="done" class="hide">
+    <div class="card done">
+      <div class="big">🎉</div>
+      <h1 class="pix" style="margin-top:10px">리포트가 완성됐어요</h1>
+      <p class="sub" style="margin-top:12px">여러분의 소중한 이야기가 잘 전달되었습니다.<br>더 나은 삼기점으로 보답하겠습니다.</p>
+      <div class="gift">🎁 기프트 안내 — 수령까지 한 걸음! (안내 문구·링크는 추후 연결)</div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   삼기 전용 제출 주소 (심청과 분리된 삼기 앱스스크립트 웹앱 URL)
+   구글시트 → 확장 프로그램 → Apps Script 배포 후 여기에 붙여넣기
+   비워두면 제출 시 전송 없이 완료 화면만 표시(테스트용)
+────────────────────────────────────────────── */
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyI2pRgA71k6EGTBpzFIInMq2PalhMu-T-gIbPqepFoeBKJWkm15kT8ZPsI0enlXTYj/exec";
+
+const EMO = {1:'😭',2:'😕',3:'😐',4:'😊',5:'🤩'};
+const cushion = v => v<=2 ? {l:'어떤 점이 가장 아쉬우셨나요?', p:'파일럿이라 부족했던 부분, 편하게 짚어주세요.'}
+                  : v===3 ? {l:'조금 더 좋아지려면 어떤 점이 있을까요?', p:'보완되면 좋을 점을 알려주세요.'}
+                          : {l:'특히 좋았던 점은 무엇이었나요?', p:'좋았던 부분을 알려주시면 더 키울게요!'};
+
+/* 2트랙 전체 문항 */
+const CONFIG = {
+  lead: { label:'담당자', stages:[
+    {title:'출발 전', npc:'러케이션을 준비하는 과정에서, 저희 안내가 도움이 되셨나요?', questions:[
+      {id:'l_inquiry', col:'문의·예약 응대', q:'문의·예약 과정의 응대는 어떠셨나요?', low:'아쉬웠어요', high:'완벽했어요', na:'잘 모르겠어요 / 해당 없음'},
+      {id:'l_design',  col:'사전 일정 설계', q:'사전 일정 설계·안내는 충분했나요?', low:'아쉬웠어요', high:'완벽했어요', na:'잘 모르겠어요 / 해당 없음'},
+    ]},
+    {title:'도착', npc:'삼기점에 처음 도착했을 때의 느낌, 기억나시나요?', questions:[
+      {id:'l_first', col:'첫인상', q:'도착했을 때 첫인상은 어땠나요?', low:'기대 이하', high:'기대 이상'},
+    ]},
+    {title:'머문 공간', npc:'팀이 머문 공간들은 어떠셨나요?', questions:[
+      {id:'l_work',  col:'업무 공간', q:'업무 공간(워크스페이스·데스크·WiFi)은 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'l_stay',  col:'숙소', q:'숙소(단독주택·2~3인·세탁·생활물품)는 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'l_lounge',col:'라운지', q:'1층 라운지(무료 간식·커피)는 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'l_scale', col:'대규모 동선', q:'30인 이상 단체가 머물기에 공간·동선은 적절했나요?', low:'불편했어요', high:'최고였어요'},
+    ]},
+    {title:'생활 & 경험', npc:'머무는 동안의 생활과 경험도 들려주세요.', questions:[
+      {id:'l_meal',  col:'식사 환경', q:'식사 환경(주방 조리 / 주변 편의 안내)은 어땠나요?', low:'아쉬웠어요', high:'최고였어요'},
+      {id:'l_whisky',col:'위스피릿 체험', q:'위스피릿 위스키 체험 프로그램은 어땠나요?', low:'아쉬웠어요', high:'최고였어요', na:'참여 안 함'},
+    ]},
+    {title:'성과 & 마무리', npc:'거의 다 왔어요! 마지막으로 전체 이야기를 들려주세요.', questions:[
+      {id:'l_goal',  col:'목적 달성', q:'이번 일정의 목적(워케이션·워크숍·팀빌딩 등) 달성에 도움이 됐나요?', low:'별로였어요', high:'기대 이상'},
+      {id:'l_value', col:'비용 대비 가치', q:'비용 대비 가치는 어땠나요? (호텔·연수원 대비)', low:'아쉬웠어요', high:'만족스러웠어요', na:'잘 모르겠어요 / 해당 없음'},
+      {id:'l_return',col:'재이용 의향', q:'다음에도 삼기점을 이용하실 의향이 있나요?', low:'글쎄요', high:'꼭 다시 올게요', na:'잘 모르겠어요 / 해당 없음'},
+      {id:'l_best', type:'text', col:'가장 좋았던 순간', q:'가장 좋았던 순간은 무엇이었나요?'},
+      {id:'l_fix',  type:'text', col:'꼭 바뀌었으면', q:'파일럿에서 이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
+      {id:'l_msg',  type:'text', col:'전하고 싶은 말', q:'삼기점 팀에게 전하고 싶은 말'},
+    ]},
+  ]},
+  member: { label:'참여자', stages:[
+    {title:'도착', npc:'삼기점에 처음 도착했을 때의 느낌, 기억나시나요?', questions:[
+      {id:'m_first', col:'첫인상', q:'도착했을 때 첫인상은 어땠나요?', low:'기대 이하', high:'기대 이상'},
+    ]},
+    {title:'머문 공간', npc:'팀이 머문 공간들은 어떠셨나요?', questions:[
+      {id:'m_work',  col:'업무 공간', q:'업무 공간(워크스페이스·데스크·WiFi)은 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'m_stay',  col:'숙소', q:'숙소(단독주택·2~3인·세탁·생활물품)는 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'m_lounge',col:'라운지', q:'1층 라운지(무료 간식·커피)는 어땠나요?', low:'불편했어요', high:'최고였어요'},
+    ]},
+    {title:'생활 & 경험', npc:'머무는 동안의 생활과 경험도 들려주세요.', questions:[
+      {id:'m_meal',  col:'식사 환경', q:'식사 환경(주방 조리 / 주변 편의 안내)은 어땠나요?', low:'아쉬웠어요', high:'최고였어요'},
+      {id:'m_whisky',col:'위스피릿 체험', q:'위스피릿 위스키 체험 프로그램은 어땠나요?', low:'아쉬웠어요', high:'최고였어요', na:'참여 안 함'},
+      {id:'m_scale', col:'대규모 동선', q:'30인 이상이 함께 머무는 데 공간·동선은 편했나요?', low:'불편했어요', high:'최고였어요'},
+    ]},
+    {title:'마무리', npc:'거의 다 왔어요! 마지막 이야기를 들려주세요.', questions:[
+      {id:'m_goal',  col:'목적 달성', q:'이번 시간이 목적(집중 근무·휴식·팀워크)에 도움이 됐나요?', low:'별로였어요', high:'기대 이상'},
+      {id:'m_return',col:'재방문 의향', q:'다음에도 이런 러케이션에 다시 오고 싶나요?', low:'글쎄요', high:'꼭 다시'},
+      {id:'m_best', type:'text', col:'가장 좋았던 순간', q:'가장 좋았던 순간은 무엇이었나요?'},
+      {id:'m_fix',  type:'text', col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
+      {id:'m_msg',  type:'text', col:'전하고 싶은 말', q:'삼기점 팀에게 전하고 싶은 말'},
+    ]},
+  ]},
+};
+
+let role=null, stageIdx=0, ans={};
+
+function pickRole(el){
+  document.querySelectorAll('.role').forEach(r=>r.classList.remove('on'));
+  el.classList.add('on'); role=el.dataset.role;
+  document.getElementById('startBtn').disabled=false;
+}
+function start(){ stageIdx=0; ans={}; document.getElementById('intro').classList.add('hide');
+  document.getElementById('quiz').classList.remove('hide'); renderStage(); window.scrollTo(0,0); }
+
+function renderStage(){
+  const T=CONFIG[role], st=T.stages[stageIdx];
+  document.getElementById('stageTitle').textContent=st.title;
+  document.getElementById('npcSay').textContent=st.npc;
+  document.getElementById('stageNow').textContent=stageIdx+1;
+  document.getElementById('stageTotal').textContent=T.stages.length;
+  // 진행 표시
+  const s=document.getElementById('stamps'); s.innerHTML='';
+  T.stages.forEach((_,i)=>{const b=document.createElement('i'); if(i<=stageIdx)b.className='on'; s.appendChild(b);});
+  // 문항
+  const c=document.getElementById('questions'); c.innerHTML='';
+  st.questions.forEach(q=>{
+    const a=ans[q.id]||(ans[q.id]={});
+    const box=document.createElement('div'); box.className='qblock'+(a.na?' na':''); box.id='qb-'+q.id;
+    if(q.type==='text'){
+      box.innerHTML=`<div class="q">${q.q}</div>
+        <textarea placeholder="자유롭게 적어주세요." oninput="setText('${q.id}',this.value)">${a.text||''}</textarea>`;
+    } else {
+      const emo=[1,2,3,4,5].map(v=>`<button data-v="${v}" class="${a.score===v?'on':''}" onclick="pickScore('${q.id}',${v},this)">${EMO[v]}<span>${v}</span></button>`).join('');
+      const cu=a.score?cushion(a.score):{l:'',p:''};
+      box.innerHTML=`<div class="q">${q.q}</div>
+        <div class="scale">${emo}</div>
+        <div class="anchor"><span>${q.low}</span><span>${q.high}</span></div>
+        <div class="followup ${a.score&&!a.na?'show':''}"><label>${cu.l}</label>
+          <textarea placeholder="${cu.p}" oninput="setText('${q.id}',this.value)">${a.text||''}</textarea></div>
+        ${q.na?`<button class="dunno ${a.na?'on':''}" data-na="${q.na}" onclick="toggleNA('${q.id}',this)">${a.na?'✓ '+q.na:q.na+' →'}</button>`:''}`;
+    }
+    c.appendChild(box);
+  });
+  document.getElementById('prevBtn').textContent = stageIdx===0 ? '◀ 처음으로' : '◀ 이전';
+  document.getElementById('nextBtn').textContent = stageIdx===T.stages.length-1 ? '제출하기 ✅' : '다음 ▶';
+  clearWarn();
+}
+
+function pickScore(id,v,btn){
+  const a=ans[id]||(ans[id]={}); a.score=v; a.na=false;
+  const box=btn.closest('.qblock'); box.classList.remove('na','invalid');
+  box.querySelectorAll('.scale button').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  const cu=cushion(v), fu=box.querySelector('.followup');
+  fu.querySelector('label').textContent=cu.l; fu.querySelector('textarea').placeholder=cu.p;
+  fu.classList.add('show');
+  const na=box.querySelector('.dunno'); if(na){na.classList.remove('on'); na.textContent=na.dataset.na+' →';}
+  clearWarn();
+}
+function setText(id,val){ (ans[id]||(ans[id]={})).text=val; clearWarn(); }
+function toggleNA(id,link){
+  const a=ans[id]||(ans[id]={}); a.na=!a.na;
+  const box=link.closest('.qblock'); box.classList.remove('invalid');
+  if(a.na){ link.classList.add('on'); link.textContent='✓ '+link.dataset.na;
+    box.classList.add('na'); box.querySelectorAll('.scale button').forEach(b=>b.classList.remove('on'));
+    box.querySelector('.followup').classList.remove('show'); a.score=null; a.text=''; }
+  else { link.classList.remove('on'); link.textContent=link.dataset.na+' →'; box.classList.remove('na'); }
+  clearWarn();
+}
+function warn(msg){const w=document.getElementById('warn'); w.textContent=msg; w.classList.remove('hide');}
+function clearWarn(){document.getElementById('warn').classList.add('hide');}
+
+/* 전 문항 필수 검증 (심청점과 동일: 이모지+서술 필수, '이전'은 스킵, NA는 통과) */
+function next(){
+  const T=CONFIG[role], st=T.stages[stageIdx];
+  for(const q of st.questions){
+    const a=ans[q.id]||{};
+    if(a.na) continue;
+    if(q.type==='text'){ if(!(a.text&&a.text.trim())) return fail(q,'이 질문에 답해주세요.'); }
+    else{
+      if(!a.score) return fail(q,'응답을 선택해주세요 🙂');
+      if(!(a.text&&a.text.trim())) return fail(q,'한 줄만 더 들려주시면 큰 도움이 됩니다.');
+    }
+  }
+  if(stageIdx===T.stages.length-1) submit();
+  else { stageIdx++; renderStage(); window.scrollTo(0,0); }
+}
+function fail(q,msg){ warn(msg); const el=document.getElementById('qb-'+q.id);
+  el.classList.add('invalid'); el.scrollIntoView({block:'center',behavior:'smooth'}); }
+function prev(){ clearWarn();
+  if(stageIdx===0){ document.getElementById('quiz').classList.add('hide'); document.getElementById('intro').classList.remove('hide'); }
+  else { stageIdx--; renderStage(); }
+  window.scrollTo(0,0);
+}
+
+/* 삼기 전용 시트로 제출 */
+function submit(){
+  const T=CONFIG[role];
+  const header=['제출시각','역할'], row=[new Date().toISOString(), T.label];
+  T.stages.forEach(st=>st.questions.forEach(q=>{
+    const a=ans[q.id]||{};
+    if(q.type==='text'){ header.push(q.col); row.push(a.text||''); }
+    else{ header.push(q.col+' 점수', q.col+' 서술');
+      row.push(a.na?'해당없음':(a.score||''), a.na?'':(a.text||'')); }
+  }));
+  const payload={ site:'삼기점', company:'한국동서발전', role:T.label, sheet:T.label, header, row };
+  const btn=document.getElementById('nextBtn'); btn.disabled=true; btn.textContent='제출 중…';
+  const finish=()=>{ document.getElementById('quiz').classList.add('hide');
+    document.getElementById('done').classList.remove('hide'); window.scrollTo(0,0); };
+  if(ENDPOINT){
+    fetch(ENDPOINT,{method:'POST',body:JSON.stringify(payload)}).then(finish).catch(finish);
+  } else { finish(); } // ENDPOINT 미설정 시 전송 없이 완료(테스트)
+}
+</script>
+</body>
+</html>
