@@ -105,7 +105,7 @@ textarea:focus{outline:none;border-color:var(--blue)}
       <div style="font-size:15px;font-weight:700;color:var(--blue)">📋 어떤 입장에서 답해주시나요?</div>
       <div class="roles">
         <div class="role" data-role="lead" onclick="pickRole(this)"><div class="ic">📋</div><div class="rt">기획·예약 담당자</div></div>
-        <div class="role" data-role="member" onclick="pickRole(this)"><div class="ic">👥</div><div class="rt">워크숍 참여 구성원</div></div>
+        <div class="role" data-role="member" onclick="pickRole(this)"><div class="ic">👥</div><div class="rt">워케이션 참여자</div></div>
       </div>
       <button class="btn cta" id="startBtn" disabled onclick="start()" style="margin-top:16px">리포트 작성하기</button>
       <div class="meta">⏱ 약 5분 소요 &nbsp;|&nbsp; 🔒 익명 응답</div>
@@ -167,7 +167,7 @@ const CONFIG = {
       {id:'l_work',  col:'업무 공간', q:'업무 공간(워크스페이스·데스크·WiFi)은 어땠나요?', low:'불편했어요', high:'최고였어요'},
       {id:'l_stay',  col:'숙소', q:'숙소(단독주택·2~3인·세탁·생활물품)는 어땠나요?', low:'불편했어요', high:'최고였어요'},
       {id:'l_lounge',col:'라운지', q:'1층 라운지(무료 간식·커피)는 어땠나요?', low:'불편했어요', high:'최고였어요'},
-      {id:'l_scale', col:'대규모 동선', q:'30인 이상 단체가 머물기에 공간·동선은 적절했나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'l_scale', col:'대규모 동선', q:'단체가 머물기에 공간·동선은 적절했나요?', low:'불편했어요', high:'최고였어요'},
     ]},
     {title:'생활 & 경험', npc:'머무는 동안의 생활과 경험도 들려주세요.', questions:[
       {id:'l_meal',  col:'식사 환경', q:'식사 환경(주방 조리 / 주변 편의 안내)은 어땠나요?', low:'아쉬웠어요', high:'최고였어요'},
@@ -194,7 +194,7 @@ const CONFIG = {
     {title:'생활 & 경험', npc:'머무는 동안의 생활과 경험도 들려주세요.', questions:[
       {id:'m_meal',  col:'식사 환경', q:'식사 환경(주방 조리 / 주변 편의 안내)은 어땠나요?', low:'아쉬웠어요', high:'최고였어요'},
       {id:'m_whisky',col:'위스피릿 체험', q:'위스피릿 위스키 체험 프로그램은 어땠나요?', low:'아쉬웠어요', high:'최고였어요', na:'참여 안 함'},
-      {id:'m_scale', col:'대규모 동선', q:'30인 이상이 함께 머무는 데 공간·동선은 편했나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'m_scale', col:'대규모 동선', q:'함께 머무는 데 공간·동선은 편했나요?', low:'불편했어요', high:'최고였어요'},
     ]},
     {title:'마무리', npc:'거의 다 왔어요! 마지막 이야기를 들려주세요.', questions:[
       {id:'m_goal',  col:'목적 달성', q:'이번 시간이 목적(집중 근무·휴식·팀워크)에 도움이 됐나요?', low:'별로였어요', high:'기대 이상'},
