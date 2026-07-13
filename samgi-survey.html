@@ -208,13 +208,26 @@ const CONFIG = {
 
 let role=null, stageIdx=0, ans={};
 
+/* 아임웹 임베드: iframe 높이를 부모에 전달해 내부 스크롤 제거 */
+const EMBED = window.parent !== window;
+if (EMBED) {
+  document.body.style.minHeight = 'auto';
+  const postH = () => parent.postMessage({samgiH: document.body.scrollHeight + 40}, '*');
+  new ResizeObserver(postH).observe(document.body);
+  window.addEventListener('load', postH);
+}
+function goTop(){
+  if (EMBED) parent.postMessage({samgiTop: true}, '*');
+  window.scrollTo(0,0);
+}
+
 function pickRole(el){
   document.querySelectorAll('.role').forEach(r=>r.classList.remove('on'));
   el.classList.add('on'); role=el.dataset.role;
   document.getElementById('startBtn').disabled=false;
 }
 function start(){ stageIdx=0; ans={}; document.getElementById('intro').classList.add('hide');
-  document.getElementById('quiz').classList.remove('hide'); renderStage(); window.scrollTo(0,0); }
+  document.getElementById('quiz').classList.remove('hide'); renderStage(); goTop(); }
 
 function renderStage(){
   const T=CONFIG[role], st=T.stages[stageIdx];
@@ -286,14 +299,14 @@ function next(){
     }
   }
   if(stageIdx===T.stages.length-1) submit();
-  else { stageIdx++; renderStage(); window.scrollTo(0,0); }
+  else { stageIdx++; renderStage(); goTop(); }
 }
 function fail(q,msg){ warn(msg); const el=document.getElementById('qb-'+q.id);
   el.classList.add('invalid'); el.scrollIntoView({block:'center',behavior:'smooth'}); }
 function prev(){ clearWarn();
   if(stageIdx===0){ document.getElementById('quiz').classList.add('hide'); document.getElementById('intro').classList.remove('hide'); }
   else { stageIdx--; renderStage(); }
-  window.scrollTo(0,0);
+  goTop();
 }
 
 /* 삼기 전용 시트로 제출 */
@@ -309,7 +322,7 @@ function submit(){
   const payload={ site:'삼기점', company:'한국동서발전', role:T.label, sheet:T.label, header, row };
   const btn=document.getElementById('nextBtn'); btn.disabled=true; btn.textContent='제출 중…';
   const finish=()=>{ document.getElementById('quiz').classList.add('hide');
-    document.getElementById('done').classList.remove('hide'); window.scrollTo(0,0); };
+    document.getElementById('done').classList.remove('hide'); goTop(); };
   if(ENDPOINT){
     fetch(ENDPOINT,{method:'POST',body:JSON.stringify(payload)}).then(finish).catch(finish);
   } else { finish(); } // ENDPOINT 미설정 시 전송 없이 완료(테스트)
