@@ -136,12 +136,12 @@ textarea:focus{outline:none;border-color:var(--blue)}
       <p class="sub" style="margin-top:12px">여러분의 소중한 이야기가 잘 전달되었습니다.<br>더 나은 삼기점으로 보답하겠습니다.</p>
       <div class="gift" id="giftBox" style="text-align:left">
         <div style="font-size:16px;font-weight:700;margin-bottom:6px">🎁 기프트 신청</div>
-        <p style="margin-bottom:10px">이름(또는 카톡 닉네임)을 남겨주시면 운영진이 확인 후 기프트를 전달해 드려요.</p>
-        <input type="text" id="giftName" placeholder="이름 또는 카톡 닉네임" maxlength="30"
+        <p style="margin-bottom:10px">성함을 남겨주시면 운영진이 확인 후 기프트를 전달해 드려요.</p>
+        <input type="text" id="giftName" placeholder="성함을 입력해주세요" maxlength="30"
           style="width:100%;border:2px solid var(--line);border-radius:8px;padding:12px;font-family:var(--sans);font-size:15px">
         <button class="btn cta" id="giftBtn" onclick="submitGift()" style="margin-top:10px">신청하기</button>
         <div id="giftWarn" class="warn hide"></div>
-        <div style="font-size:13px;color:var(--mut);margin-top:10px">이름은 기프트 전달에만 쓰여요. 설문 응답과는 연결되지 않습니다.</div>
+        <div style="font-size:13px;color:var(--mut);margin-top:10px">성함은 기프트 전달에만 쓰이며 설문 응답과는 연결되지 않습니다.</div>
       </div>
       <div class="gift hide" id="giftDone" style="text-align:center">✅ <b>기프트 신청 완료!</b><br>운영진 확인 후 전달해 드릴게요.</div>
     </div>
@@ -234,7 +234,7 @@ function goTop(){
 function submitGift(){
   const name=document.getElementById('giftName').value.trim();
   const w=document.getElementById('giftWarn');
-  if(!name){ w.textContent='이름 또는 카톡 닉네임을 입력해주세요.'; w.classList.remove('hide'); return; }
+  if(!name){ w.textContent='성함을 입력해주세요.'; w.classList.remove('hide'); return; }
   w.classList.add('hide');
   const btn=document.getElementById('giftBtn'); btn.disabled=true; btn.textContent='신청 중…';
   const payload={ site:'삼기점', sheet:'기프트',
