@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>러스틱타운 삼기점 피드백 대시보드</title>
+<title>러스틱타운 워크빌리지 피드백 대시보드</title>
 <style>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -75,7 +75,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
 <div class="wrap">
   <div class="header">
     <div>
-      <div class="title">📊 삼기점 피드백 대시보드</div>
+      <div class="title">📊 워크빌리지 피드백 대시보드</div>
     </div>
     <div class="filters">
       <div class="seg" id="trackSeg">
@@ -83,10 +83,14 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
         <button data-t="담당자" onclick="setTrack('담당자',this)">담당자</button>
         <button data-t="참여자" onclick="setTrack('참여자',this)">참여자</button>
       </div>
+      <select id="companySel" onchange="apply()"
+        style="font-family:inherit;font-size:15px;padding:7px 10px;border:2px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
+        <option value="all">전체 회사</option>
+      </select>
       <button class="btn-download" onclick="downloadCSV()">CSV ⬇</button>
     </div>
   </div>
-  <div class="eyebrow">한국동서발전 러케이션 · 파일럿 피드백</div>
+  <div class="eyebrow">삼기점 워크빌리지 · 피드백</div>
 
   <div class="summary">
     <div class="stat"><div class="stat-label">총 응답 수</div><div class="stat-value" id="totalCount">0</div>
@@ -123,16 +127,22 @@ let all=[], filtered=[], track='all';
 
 function load(){
   fetch(ENDPOINT).then(r=>r.json()).then(d=>{
-    all=[]
-      .concat((d['담당자']||[]).map(r=>Object.assign({_track:'담당자'},r)))
-      .concat((d['참여자']||[]).map(r=>Object.assign({_track:'참여자'},r)));
+    const tag=(rows,tr,defC)=>(rows||[]).map(r=>{const o=Object.assign({_track:tr},r); if(defC&&!o['회사'])o['회사']=defC; return o;});
+    all=[].concat(
+      tag(d['담당자'],'담당자','한국동서발전(파일럿)'), tag(d['참여자'],'참여자','한국동서발전(파일럿)'),
+      tag(d['WV담당자'],'담당자'), tag(d['WV참여자'],'참여자'));
+    const sel=document.getElementById('companySel'), cur=sel.value;
+    sel.innerHTML='<option value="all">전체 회사</option>';
+    [...new Set(all.map(r=>r['회사']||'미지정'))].forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+    sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all';
     apply();
   }).catch(e=>{
     document.getElementById('areaList').innerHTML='<div class="no-comments">데이터를 불러오지 못했습니다. ('+esc(e.message)+')</div>';
   });
 }
 function setTrack(t,btn){track=t;document.querySelectorAll('#trackSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');apply();}
-function apply(){filtered = track==='all'?all:all.filter(r=>trackOf(r)===track);render();}
+function apply(){const c=document.getElementById('companySel').value;
+  filtered=all.filter(r=>(track==='all'||trackOf(r)===track)&&(c==='all'||(r['회사']||'미지정')===c));render();}
 
 // 필터된 행에서 "○○ 점수" 컬럼(=영역)을 등장 순서대로 수집
 function areaKeys(){
