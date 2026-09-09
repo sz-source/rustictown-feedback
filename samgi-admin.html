@@ -115,7 +115,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbyI2pRgA71k6EGTBpzFIInMq2PalhMu-T-gIbPqepFoeBKJWkm15kT8ZPsI0enlXTYj/exec";
 const OPEN_COLS = ['가장 좋았던 순간','꼭 바뀌었으면','전하고 싶은 말'];
 const OPEN_META = {'가장 좋았던 순간':{icon:'⭐'},'꼭 바뀌었으면':{icon:'🔧'},'전하고 싶은 말':{icon:'💬'}};
-const AREA_ICON = {'문의·예약 응대':'📨','사전 일정 설계':'🗓️','첫인상':'🚪','업무 공간':'💻','업무공간':'💻','숙소':'🏠','라운지':'☕','대규모 동선':'🧭','식사 환경':'🍽️','위스피릿 체험':'🥃','목적 달성':'🎯','비용 대비 가치':'💰','재이용 의향':'🔄','재방문 의향':'🔄'};
+const AREA_ICON = {'문의·예약 응대':'📨','사전 일정 설계':'🗓️','첫인상':'🚪','업무 공간':'💻','업무공간':'💻','숙소':'🏠','라운지':'☕','대규모 동선':'🧭','식사 환경':'🍽️','식사 해결':'🍽️','체류 중 대응':'💬','현장 안내':'📍','몰입 환경':'🧘','위스피릿 체험':'🥃','목적 달성':'🎯','비용 대비 가치':'💰','재이용 의향':'🔄','재방문 의향':'🔄'};
 
 function esc(s){const d=document.createElement('div');d.textContent=(s==null?'':String(s));return d.innerHTML;}
 function dateOf(r){return String(r['제출시각']||'').split('T')[0];}
