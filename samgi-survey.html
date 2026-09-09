@@ -190,7 +190,7 @@ const CONFIG = {
     {title:'전체 돌아보기', npc:'거의 다 왔어요! 마지막으로 전체를 돌아보며 한마디 남겨주세요.', questions:[
       {id:'l_best', type:'text', col:'가장 좋았던 순간', q:'가장 좋았던 순간은 무엇이었나요?'},
       {id:'l_fix',  type:'text', required:true, col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
-      {id:'l_msg',  type:'text', col:'전하고 싶은 말', q:'삼기점 팀에게 전하고 싶은 말'},
+      {id:'l_msg',  type:'text', col:'전하고 싶은 말', q:'러스틱타운에게 전하고 싶은 말'},
     ]},
   ]},
   member: { label:'참여자', stages:[
@@ -214,7 +214,7 @@ const CONFIG = {
     {title:'전체 돌아보기', npc:'거의 다 왔어요! 마지막으로 전체를 돌아보며 한마디 남겨주세요.', questions:[
       {id:'m_best', type:'text', col:'가장 좋았던 순간', q:'가장 좋았던 순간은 무엇이었나요?'},
       {id:'m_fix',  type:'text', required:true, col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
-      {id:'m_msg',  type:'text', col:'전하고 싶은 말', q:'삼기점 팀에게 전하고 싶은 말'},
+      {id:'m_msg',  type:'text', col:'전하고 싶은 말', q:'러스틱타운에게 전하고 싶은 말'},
     ]},
   ]},
 };
@@ -310,17 +310,22 @@ function renderStage(){
 /* 스테이지에서 가장 낮게 준 항목 (NA 제외). 전부 동점이면 null */
 function lowestItems(st){
   const qs=st.questions.filter(q=>q.type!=='text'&&ans[q.id]&&!ans[q.id].na&&ans[q.id].score);
-  if(!qs.length) return {items:[],allEqual:true};
+  if(!qs.length) return {items:[],allEqual:true,lo:null,n:0};
   const lo=Math.min(...qs.map(q=>ans[q.id].score));
   const lows=qs.filter(q=>ans[q.id].score===lo);
-  return {items:lows, allEqual: lows.length===qs.length && qs.length>1};
+  return {items:lows, allEqual: lows.length===qs.length && qs.length>1, lo, n:qs.length};
 }
+/* 프롬프트: 낮은 점수엔 '아쉬운 점', 높은 점수엔 '좋았던 점·바람' — 없는 불만을 지어내지 않게 */
 function updateStagePrompt(){
   const L=document.getElementById('stageLabel'); if(!L) return;
-  const {items,allEqual}=lowestItems(CONFIG[role].stages[stageIdx]);
-  if(!items.length) L.textContent='💬 점수를 모두 고르신 뒤, 아쉬웠거나 바라는 점이 있다면 적어주세요.';
-  else if(allEqual) L.textContent='💬 이 중 아쉬웠거나 바라는 점이 하나라도 있다면?';
-  else L.textContent=`💬 '${items.slice(0,2).map(q=>q.col).join('·')}'에 대해 아쉬웠거나 바라는 점이 있다면? (다른 항목도 좋아요)`;
+  const {items,allEqual,lo,n}=lowestItems(CONFIG[role].stages[stageIdx]);
+  const others = n>1 ? ' (다른 항목도 좋아요)' : '';
+  if(!items.length) L.textContent='💬 점수를 모두 고르신 뒤, 한 줄 남겨주세요.';
+  else if(allEqual) L.textContent = lo>=4 ? '💬 모두 좋으셨네요! 특히 좋았던 점이나, 작은 바람이 있다면?'
+                                          : '💬 이 중 아쉬웠던 점이 있다면?';
+  else { const name=items.slice(0,2).map(q=>q.col).join('·');
+    L.textContent = lo>=4 ? `💬 '${name}'에서 특히 좋았던 점이나, 바라는 점이 있다면?${others}`
+                          : `💬 '${name}'에 대해 아쉬웠던 점이 있다면?${others}`; }
 }
 function setStageText(v){ stageText[stageIdx]=v; document.getElementById('stagebox').classList.remove('invalid'); clearWarn(); }
 
