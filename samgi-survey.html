@@ -69,6 +69,9 @@ h1.pix{font-size:22px;color:var(--blue);text-shadow:1px 0 0 currentColor;line-he
 .anchor{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-top:8px}
 textarea{width:100%;border:2px solid var(--line);border-radius:8px;padding:12px;font-family:var(--sans);font-size:15px;resize:vertical;min-height:74px;margin-top:8px}
 textarea:focus{outline:none;border-color:var(--blue)}
+.stagebox{margin-top:22px;padding:16px;border:2px dashed var(--line);border-radius:10px;background:var(--bg)}
+.stagebox label{font-size:15px;font-weight:600;display:block}
+.stagebox.invalid{border-color:var(--red)}
 .followup{margin-top:16px;display:none}
 .followup.show{display:block;animation:fade .25s}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
@@ -108,7 +111,7 @@ textarea:focus{outline:none;border-color:var(--blue)}
         <div class="role" data-role="member" onclick="pickRole(this)"><div class="ic">👥</div><div class="rt">워크빌리지 참여자</div></div>
       </div>
       <button class="btn cta" id="startBtn" disabled onclick="start()" style="margin-top:16px">리포트 작성하기</button>
-      <div class="meta">⏱ 약 5분 소요 &nbsp;|&nbsp; 🔒 익명 응답</div>
+      <div class="meta">⏱ 약 3~5분 소요 &nbsp;|&nbsp; 🔒 익명 응답</div>
     </div>
   </section>
 
@@ -158,9 +161,6 @@ textarea:focus{outline:none;border-color:var(--blue)}
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbyI2pRgA71k6EGTBpzFIInMq2PalhMu-T-gIbPqepFoeBKJWkm15kT8ZPsI0enlXTYj/exec";
 
 const EMO = {1:'😭',2:'😕',3:'😐',4:'😊',5:'🤩'};
-const cushion = v => v<=2 ? {l:'어떤 점이 가장 아쉬우셨나요?', p:'부족했던 부분, 편하게 짚어주세요.'}
-                  : v===3 ? {l:'조금 더 좋아지려면 어떤 점이 있을까요?', p:'보완되면 좋을 점을 알려주세요.'}
-                          : {l:'특히 좋았던 점, 또는 그래도 아쉬웠던 점이 있다면?', p:'좋았던 이유나 작은 불편(비품·소음·안내 등)도 좋아요.'};
 
 /* 2트랙 전체 문항 */
 const CONFIG = {
@@ -187,7 +187,7 @@ const CONFIG = {
       {id:'l_value', col:'비용 대비 가치', q:'비용 대비 가치는 어땠나요? (리조트·연수원 대비)', low:'아쉬웠어요', high:'만족스러웠어요', na:'잘 모르겠어요 / 해당 없음'},
       {id:'l_return',col:'재이용 의향', q:'다음에도 삼기점을 이용하실 의향이 있나요?', low:'다시 오긴 어려워요', high:'꼭 다시 올게요', na:'잘 모르겠어요 / 해당 없음'},
       {id:'l_best', type:'text', col:'가장 좋았던 순간', q:'가장 좋았던 순간은 무엇이었나요?'},
-      {id:'l_fix',  type:'text', col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
+      {id:'l_fix',  type:'text', required:true, col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
       {id:'l_msg',  type:'text', col:'전하고 싶은 말', q:'삼기점 팀에게 전하고 싶은 말'},
     ]},
   ]},
@@ -209,13 +209,13 @@ const CONFIG = {
       {id:'m_goal',  col:'몰입 환경', q:'일과 휴식에 몰입하기 좋은 환경이었나요?', low:'방해됐어요', high:'몰입하기 좋았어요'},
       {id:'m_return',col:'재방문 의향', q:'다음에도 삼기점에 다시 오고 싶나요?', low:'다시 오긴 어려워요', high:'꼭 다시 올게요'},
       {id:'m_best', type:'text', col:'가장 좋았던 순간', q:'가장 좋았던 순간은 무엇이었나요?'},
-      {id:'m_fix',  type:'text', col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
+      {id:'m_fix',  type:'text', required:true, col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
       {id:'m_msg',  type:'text', col:'전하고 싶은 말', q:'삼기점 팀에게 전하고 싶은 말'},
     ]},
   ]},
 };
 
-let role=null, stageIdx=0, ans={};
+let role=null, stageIdx=0, ans={}, stageText={};
 
 
 /* 아임웹 임베드: iframe 높이를 부모에 전달해 내부 스크롤 제거 */
@@ -259,8 +259,7 @@ function pickRole(el){
   el.classList.add('on'); role=el.dataset.role;
   document.getElementById('startBtn').disabled=false;
 }
-function start(){
-  stageIdx=0; ans={}; document.getElementById('intro').classList.add('hide');
+function start(){ stageIdx=0; ans={}; stageText={}; document.getElementById('intro').classList.add('hide');
   document.getElementById('quiz').classList.remove('hide'); renderStage(); goTop(); }
 
 function renderStage(){
@@ -269,27 +268,34 @@ function renderStage(){
   document.getElementById('npcSay').textContent=st.npc;
   document.getElementById('stageNow').textContent=stageIdx+1;
   document.getElementById('stageTotal').textContent=T.stages.length;
-  // 진행 표시
   const s=document.getElementById('stamps'); s.innerHTML='';
   T.stages.forEach((_,i)=>{const b=document.createElement('i'); if(i<=stageIdx)b.className='on'; s.appendChild(b);});
-  // 문항
   const c=document.getElementById('questions'); c.innerHTML='';
-  st.questions.forEach(q=>{
+  const scaleQs=st.questions.filter(q=>q.type!=='text');
+  // 1) 척도 문항
+  scaleQs.forEach(q=>{
     const a=ans[q.id]||(ans[q.id]={});
     const box=document.createElement('div'); box.className='qblock'+(a.na?' na':''); box.id='qb-'+q.id;
-    if(q.type==='text'){
-      box.innerHTML=`<div class="q">${q.q}</div>
-        <textarea placeholder="자유롭게 적어주세요." oninput="setText('${q.id}',this.value)">${a.text||''}</textarea>`;
-    } else {
-      const emo=[1,2,3,4,5].map(v=>`<button data-v="${v}" class="${a.score===v?'on':''}" onclick="pickScore('${q.id}',${v},this)">${EMO[v]}<span>${v}</span></button>`).join('');
-      const cu=a.score?cushion(a.score):{l:'',p:''};
-      box.innerHTML=`<div class="q">${q.q}</div>
-        <div class="scale">${emo}</div>
-        <div class="anchor"><span>${q.low}</span><span>${q.high}</span></div>
-        <div class="followup ${a.score&&!a.na?'show':''}"><label>${cu.l}</label>
-          <textarea placeholder="${cu.p}" oninput="setText('${q.id}',this.value)">${a.text||''}</textarea></div>
-        ${q.na?`<button class="dunno ${a.na?'on':''}" data-na="${q.na}" onclick="toggleNA('${q.id}',this)">${a.na?'✓ '+q.na:q.na+' →'}</button>`:''}`;
-    }
+    const emo=[1,2,3,4,5].map(v=>`<button data-v="${v}" class="${a.score===v?'on':''}" onclick="pickScore('${q.id}',${v},this)">${EMO[v]}<span>${v}</span></button>`).join('');
+    box.innerHTML=`<div class="q">${q.q}</div>
+      <div class="scale">${emo}</div>
+      <div class="anchor"><span>${q.low}</span><span>${q.high}</span></div>
+      ${q.na?`<button class="dunno ${a.na?'on':''}" data-na="${q.na}" onclick="toggleNA('${q.id}',this)">${a.na?'✓ '+q.na:q.na+' →'}</button>`:''}`;
+    c.appendChild(box);
+  });
+  // 2) 스테이지 서술 1칸 (필수) — 가장 낮게 준 항목을 부드럽게 지목
+  if(scaleQs.length){
+    const sb=document.createElement('div'); sb.className='stagebox'; sb.id='stagebox';
+    sb.innerHTML=`<label id="stageLabel"></label>
+      <textarea placeholder="비품·소음·안내 등 작은 불편이나 바라는 점도 좋아요." oninput="setStageText(this.value)">${stageText[stageIdx]||''}</textarea>`;
+    c.appendChild(sb); updateStagePrompt();
+  }
+  // 3) 마지막 서술 문항 (꼭 바뀌었으면만 필수)
+  st.questions.filter(q=>q.type==='text').forEach(q=>{
+    const a=ans[q.id]||(ans[q.id]={});
+    const box=document.createElement('div'); box.className='qblock'; box.id='qb-'+q.id;
+    box.innerHTML=`<div class="q">${q.q}${q.required?'':' <span style="font-size:13px;color:var(--mut);font-weight:400">(선택)</span>'}</div>
+      <textarea placeholder="${q.required?'꼭 한 가지만이라도 적어주세요.':'자유롭게 적어주세요.'}" oninput="setText('${q.id}',this.value)">${a.text||''}</textarea>`;
     c.appendChild(box);
   });
   document.getElementById('prevBtn').textContent = stageIdx===0 ? '◀ 처음으로' : '◀ 이전';
@@ -297,41 +303,54 @@ function renderStage(){
   clearWarn();
 }
 
+/* 스테이지에서 가장 낮게 준 항목 (NA 제외). 전부 동점이면 null */
+function lowestItems(st){
+  const qs=st.questions.filter(q=>q.type!=='text'&&ans[q.id]&&!ans[q.id].na&&ans[q.id].score);
+  if(!qs.length) return {items:[],allEqual:true};
+  const lo=Math.min(...qs.map(q=>ans[q.id].score));
+  const lows=qs.filter(q=>ans[q.id].score===lo);
+  return {items:lows, allEqual: lows.length===qs.length && qs.length>1};
+}
+function updateStagePrompt(){
+  const L=document.getElementById('stageLabel'); if(!L) return;
+  const {items,allEqual}=lowestItems(CONFIG[role].stages[stageIdx]);
+  if(!items.length) L.textContent='💬 점수를 모두 고르신 뒤, 아쉬웠거나 바라는 점이 있다면 적어주세요.';
+  else if(allEqual) L.textContent='💬 이 중 아쉬웠거나 바라는 점이 하나라도 있다면?';
+  else L.textContent=`💬 '${items.slice(0,2).map(q=>q.col).join('·')}'에 대해 아쉬웠거나 바라는 점이 있다면? (다른 항목도 좋아요)`;
+}
+function setStageText(v){ stageText[stageIdx]=v; document.getElementById('stagebox').classList.remove('invalid'); clearWarn(); }
+
 function pickScore(id,v,btn){
   const a=ans[id]||(ans[id]={}); a.score=v; a.na=false;
   const box=btn.closest('.qblock'); box.classList.remove('na','invalid');
   box.querySelectorAll('.scale button').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
-  const cu=cushion(v), fu=box.querySelector('.followup');
-  fu.querySelector('label').textContent=cu.l; fu.querySelector('textarea').placeholder=cu.p;
-  fu.classList.add('show');
   const na=box.querySelector('.dunno'); if(na){na.classList.remove('on'); na.textContent=na.dataset.na+' →';}
-  clearWarn();
+  updateStagePrompt(); clearWarn();
 }
 function setText(id,val){ (ans[id]||(ans[id]={})).text=val; clearWarn(); }
 function toggleNA(id,link){
   const a=ans[id]||(ans[id]={}); a.na=!a.na;
   const box=link.closest('.qblock'); box.classList.remove('invalid');
   if(a.na){ link.classList.add('on'); link.textContent='✓ '+link.dataset.na;
-    box.classList.add('na'); box.querySelectorAll('.scale button').forEach(b=>b.classList.remove('on'));
-    box.querySelector('.followup').classList.remove('show'); a.score=null; a.text=''; }
+    box.classList.add('na'); box.querySelectorAll('.scale button').forEach(b=>b.classList.remove('on')); a.score=null; }
   else { link.classList.remove('on'); link.textContent=link.dataset.na+' →'; box.classList.remove('na'); }
-  clearWarn();
+  updateStagePrompt(); clearWarn();
 }
 function warn(msg){const w=document.getElementById('warn'); w.textContent=msg; w.classList.remove('hide');}
 function clearWarn(){document.getElementById('warn').classList.add('hide');}
 
-/* 전 문항 필수 검증 (심청점과 동일: 이모지+서술 필수, '이전'은 스킵, NA는 통과) */
+/* 검증: 점수 필수(NA 허용) · 스테이지 서술 필수 · 마지막은 '꼭 바뀌었으면'만 필수. '이전'은 검증 없음 */
 function next(){
   const T=CONFIG[role], st=T.stages[stageIdx];
-  for(const q of st.questions){
-    const a=ans[q.id]||{};
-    if(a.na) continue;
-    if(q.type==='text'){ if(!(a.text&&a.text.trim())) return fail(q,'이 질문에 답해주세요.'); }
-    else{
-      if(!a.score) return fail(q,'응답을 선택해주세요 🙂');
-      if(!(a.text&&a.text.trim())) return fail(q,'한 줄만 더 들려주시면 큰 도움이 됩니다.');
-    }
+  // 화면 순서대로 검증: 점수 → 스테이지 서술 → 마지막 서술
+  for(const q of st.questions){ const a=ans[q.id]||{};
+    if(q.type!=='text' && !a.na && !a.score) return fail(q,'응답을 선택해주세요 🙂'); }
+  if(st.questions.some(q=>q.type!=='text') && !(stageText[stageIdx]||'').trim()){
+    warn('한 줄만 남겨주시면 큰 도움이 됩니다.');
+    const sb=document.getElementById('stagebox'); sb.classList.add('invalid'); sb.scrollIntoView({block:'center',behavior:'smooth'}); return;
   }
+  for(const q of st.questions){ const a=ans[q.id]||{};
+    if(q.type==='text' && q.required && !(a.text&&a.text.trim())) return fail(q,'이것만은 꼭 한 가지 적어주세요 🙏'); }
   if(stageIdx===T.stages.length-1) submit();
   else { stageIdx++; renderStage(); goTop(); }
 }
@@ -343,23 +362,28 @@ function prev(){ clearWarn();
   goTop();
 }
 
-/* 삼기 전용 시트로 제출 */
+/* 제출: 스테이지 서술은 가장 낮게 준 항목의 '○○ 서술' 컬럼에 저장 (동점이면 첫 항목) → 시트·대시보드 구조 그대로 */
 function submit(){
   const T=CONFIG[role];
   const header=['제출시각','역할'], row=[new Date().toISOString(), T.label];
-  T.stages.forEach(st=>st.questions.forEach(q=>{
-    const a=ans[q.id]||{};
-    if(q.type==='text'){ header.push(q.col); row.push(a.text||''); }
-    else{ header.push(q.col+' 점수', q.col+' 서술');
-      row.push(a.na?'해당없음':(a.score||''), a.na?'':(a.text||'')); }
-  }));
+  T.stages.forEach((st,si)=>{
+    const {items}=lowestItems(st);
+    const scaleQs=st.questions.filter(q=>q.type!=='text');
+    const target=(items[0]||scaleQs[0]||{}).id;
+    st.questions.forEach(q=>{
+      const a=ans[q.id]||{};
+      if(q.type==='text'){ header.push(q.col); row.push(a.text||''); }
+      else{ header.push(q.col+' 점수', q.col+' 서술');
+        row.push(a.na?'해당없음':(a.score||''), q.id===target?(stageText[si]||''):''); }
+    });
+  });
   const payload={ site:'삼기점', role:T.label, sheet:'WV'+T.label, header, row };
   const btn=document.getElementById('nextBtn'); btn.disabled=true; btn.textContent='제출 중…';
   const finish=()=>{ document.getElementById('quiz').classList.add('hide');
     document.getElementById('done').classList.remove('hide'); goTop(); };
   const fail=()=>{ btn.disabled=false; btn.textContent='다시 제출하기 ▶'; warn('전송에 실패했어요. 네트워크 확인 후 다시 시도해주세요.'); };
   if(ENDPOINT){ postJSON(payload).then(ok=>ok?finish():fail()).catch(fail); }
-  else { finish(); } // ENDPOINT 미설정 시 전송 없이 완료(테스트)
+  else { finish(); }
 }
 </script>
 </body>
