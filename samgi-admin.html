@@ -125,15 +125,22 @@ function tierColor(a){return a>=4?'var(--green)':a>=3?'var(--orange)':'var(--red
 
 let all=[], filtered=[], track='all';
 
+function getKey(){
+  let k=null; try{ k=sessionStorage.getItem('samgiKey'); }catch(_){}
+  if(!k){ k=prompt('대시보드 비밀번호를 입력하세요'); if(!k) return null; try{ sessionStorage.setItem('samgiKey',k); }catch(_){} }
+  return k;
+}
 function load(){
-  fetch(ENDPOINT).then(r=>r.json()).then(d=>{
+  const key=getKey(); if(!key){ document.getElementById('areaList').innerHTML='<div class="no-comments">비밀번호가 필요합니다. 새로고침 후 입력해주세요.</div>'; return; }
+  fetch(ENDPOINT+'?key='+encodeURIComponent(key)).then(r=>r.json()).then(d=>{
+    if(d&&d.error==='unauthorized'){ try{ sessionStorage.removeItem('samgiKey'); }catch(_){} alert('비밀번호가 올바르지 않습니다.'); location.reload(); return; }
     const tag=(rows,tr,defC)=>(rows||[]).map(r=>{const o=Object.assign({_track:tr},r); if(defC&&!o['회사'])o['회사']=defC; return o;});
     all=[].concat(
       tag(d['담당자'],'담당자','한국동서발전(파일럿)'), tag(d['참여자'],'참여자','한국동서발전(파일럿)'),
       tag(d['WV담당자'],'담당자'), tag(d['WV참여자'],'참여자'));
     const sel=document.getElementById('companySel'), cur=sel.value;
     sel.innerHTML='<option value="all">전체 회사</option>';
-    [...new Set(all.map(r=>r['회사']||'미지정'))].forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+    [...new Set(all.map(r=>r['회사']||'정식 운영'))].forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
     sel.value=[...sel.options].some(o=>o.value===cur)?cur:'all';
     apply();
   }).catch(e=>{
@@ -142,7 +149,7 @@ function load(){
 }
 function setTrack(t,btn){track=t;document.querySelectorAll('#trackSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');apply();}
 function apply(){const c=document.getElementById('companySel').value;
-  filtered=all.filter(r=>(track==='all'||trackOf(r)===track)&&(c==='all'||(r['회사']||'미지정')===c));render();}
+  filtered=all.filter(r=>(track==='all'||trackOf(r)===track)&&(c==='all'||(r['회사']||'정식 운영')===c));render();}
 
 // 필터된 행에서 "○○ 점수" 컬럼(=영역)을 등장 순서대로 수집
 function areaKeys(){
