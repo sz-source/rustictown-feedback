@@ -35,7 +35,7 @@ h1.pix{font-size:22px;color:var(--blue);text-shadow:1px 0 0 currentColor;line-he
 .meta{text-align:center;color:var(--mut);font-size:13px;margin-top:16px}
 .npc{display:flex;gap:12px;align-items:flex-start;background:var(--bg);
   border:2px solid var(--line);border-radius:8px;padding:14px 16px;margin:18px 0}
-.npc .face{font-size:26px;flex:none;line-height:1.2}
+.npc .face{width:44px;height:44px;flex:none;image-rendering:pixelated;image-rendering:crisp-edges}
 .npc .say{font-size:15px}
 .npc .say b{font-family:var(--pix);font-size:12px;color:var(--blue);display:block;margin-bottom:3px;text-shadow:.4px 0 0 currentColor}
 .cushion{border-left:3px solid var(--red);background:#fff5f6;border-radius:0 6px 6px 0;
@@ -102,7 +102,7 @@ textarea:focus{outline:none;border-color:var(--blue)}
       <div class="eyebrow">삼기점 워크빌리지</div>
       <h1 class="pix" style="margin-top:8px">소중한 이야기를 들려주세요</h1>
       <p class="sub">이번 일정을 되돌아보며 리포트를 남겨주세요.</p>
-      <div class="npc"><div class="face">🧑‍🌾</div>
+      <div class="npc"><img class="face" src="townkeeper.png" alt="타운지기">
         <div class="say"><b>타운지기</b>여러분이 어떻게 느끼셨는지 정말 궁금해요. 편하게, 5분이면 됩니다.</div></div>
       <div class="cushion">🌱 삼기점 워크빌리지는 <b>이제 막 문을 연 공간</b>입니다. 아직 다듬어가는 중이라 아쉬운 부분이 있었을 텐데, <b>그 이야기까지 솔직하게</b> 들려주시면 다음 팀의 경험이 더 좋아집니다.</div>
       <div style="font-size:15px;font-weight:700;color:var(--blue)">📋 어떤 입장에서 답해주시나요?</div>
@@ -120,7 +120,7 @@ textarea:focus{outline:none;border-color:var(--blue)}
     <div class="progress" id="stamps"></div>
     <div class="card">
       <div class="stage-title" id="stageTitle"></div>
-      <div class="npc"><div class="face">🧑‍🌾</div><div class="say"><b>타운지기</b><span id="npcSay"></span></div></div>
+      <div class="npc"><img class="face" src="townkeeper.png" alt="타운지기"><div class="say"><b>타운지기</b><span id="npcSay"></span></div></div>
       <div id="questions"></div>
       <div id="warn" class="warn hide"></div>
       <div class="nav">
