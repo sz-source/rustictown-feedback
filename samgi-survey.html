@@ -6,6 +6,7 @@
 <title>러스틱타운 삼기점 · 워크빌리지 리포트</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/quiple/galmuri/dist/galmuri.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
 <style>
 /* ── 삼기(워크빌리지) 팔레트 = 러스틱타운 DESIGN.md SSOT ── */
 :root{
@@ -138,14 +139,21 @@ textarea:focus{outline:none;border-color:var(--blue)}
       <h1 class="pix" style="margin-top:10px">리포트가 완성됐어요</h1>
       <p class="sub" style="margin-top:12px">여러분의 소중한 이야기가 잘 전달되었습니다.<br>더 나은 삼기점으로 보답하겠습니다.</p>
       <div class="gift" id="giftBox" style="text-align:left">
-        <div style="font-size:16px;font-weight:700;margin-bottom:6px">🎁 기프트 신청</div>
-        <p style="margin-bottom:10px">성함을 남겨주시면 운영진이 확인 후 기프트를 전달해 드려요.<br>제출하신 설문은 익명 처리되니 안심하세요.</p>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px">🎁 기프트 받는 방법</div>
+        <ol style="margin:0 0 14px 20px;padding:0;line-height:1.7">
+          <li><b>후기 남기기</b> 👉 <a href="https://www.rustictown.co.kr/logs" target="_blank" rel="noopener" style="color:var(--red);font-weight:700">리뷰 작성하러 가기 →</a><br>
+            <span style="font-size:13px;color:var(--mut)">로그인 후 작성 · 300자 이상 · 사진 1장 · 작성자명은 아래 성함과 같게</span></li>
+          <li><b>성함 남기기</b> — 운영진이 확인 후 기프트를 전달해 드려요</li>
+        </ol>
         <input type="text" id="giftName" placeholder="성함을 입력해주세요" maxlength="30"
           style="width:100%;border:2px solid var(--line);border-radius:8px;padding:12px;font-family:var(--sans);font-size:15px">
         <button class="btn cta" id="giftBtn" onclick="submitGift()" style="margin-top:10px">신청하기</button>
         <div id="giftWarn" class="warn hide"></div>
+        <div style="font-size:13px;color:var(--mut);margin-top:10px">제출하신 설문은 익명 처리되니 안심하세요.</div>
       </div>
-      <div class="gift hide" id="giftDone" style="text-align:center">✅ <b>기프트 신청 완료!</b><br>운영진 확인 후 전달해 드릴게요.</div>
+      <div class="gift hide" id="giftDone" style="text-align:center">✅ <b>기프트 신청 완료!</b><br>후기까지 마치셨다면 아래 버튼으로 타운지기에게 알려주세요.
+        <button class="btn" onclick="shareKakao()" style="margin-top:14px;background:#FEE500;color:#191919;border-color:#d4c200">💬 타운지기에게 공유하기</button>
+      </div>
     </div>
   </section>
 
@@ -238,6 +246,18 @@ function goTop(){
 function postJSON(payload){
   return fetch(ENDPOINT,{method:'POST',body:JSON.stringify(payload)})
     .then(r=>r.text()).then(t=>{ try{ return JSON.parse(t).ok===true; }catch(_){ return false; } });
+}
+
+/* 카카오 공유: 심청점과 동일한 앱 키 (같은 도메인 sz-source.github.io) */
+try { if (window.Kakao && !Kakao.isInitialized()) Kakao.init('0e51331132e9022a6e47f5ccc669c14d'); } catch(_){}
+function shareKakao(){
+  if(!window.Kakao || !Kakao.isInitialized()){ alert('카카오톡 공유를 불러오지 못했어요. 카톡으로 직접 알려주세요!'); return; }
+  Kakao.Share.sendDefault({
+    objectType:'text',
+    text:'워크빌리지 리포트 제출 완료! ⭐\n삼기점에서의 이야기가 기록되었어요.\n후기까지 남겼으니 기프트 부탁드려요 🎁',
+    link:{ mobileWebUrl:'https://www.rustictown.co.kr/logs', webUrl:'https://www.rustictown.co.kr/logs' },
+    buttonTitle:'워크빌리지 이야기 둘러보기'
+  });
 }
 
 /* 기프트 신청: 응답과 분리된 '기프트' 탭에 이름만 저장 (익명성 유지) */
