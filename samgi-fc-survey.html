@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>러스틱타운 삼기점 · 포레스트캠프 리포트</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/quiple/galmuri/dist/galmuri.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
+<style>
+/* ── 삼기 팔레트 = 러스틱타운 DESIGN.md SSOT ── */
+:root{
+  --blue:#00327a; --red:#ff2746; --ink:#222; --mut:#7A828C;
+  --line:#E6E8EC; --paper:#fff; --bg:#f7f9fc;
+  --pix:'Galmuri11','Galmuri14',monospace; --sans:'Pretendard',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;
+  min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
+.wrap{width:100%;max-width:600px}
+.pix{font-family:var(--pix);letter-spacing:.5px}
+h1.pix{font-size:22px;color:var(--blue);text-shadow:1px 0 0 currentColor;line-height:1.5}
+.stage-title{font-family:var(--pix);font-size:16px;color:var(--blue);text-shadow:.6px 0 0 currentColor}
+.eyebrow{font-size:13px;font-weight:700;color:var(--mut);letter-spacing:.5px}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:8px;
+  box-shadow:5px 5px 0 rgba(0,0,50,.10);padding:28px 24px}
+.hero{position:relative;border:3px solid var(--ink);border-radius:8px;overflow:hidden;
+  background:linear-gradient(135deg,#00214f,#00327a 60%,#0a4a9e);margin-bottom:-14px;
+  padding:34px 24px 40px;text-align:center;box-shadow:5px 5px 0 rgba(0,0,50,.10)}
+.hero .firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffe98a;
+  box-shadow:0 0 8px 2px #ffe98a99;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-8px);opacity:.9}}
+.hero .wmark{position:relative;font-family:var(--pix);color:#ffe98a;font-size:11px;letter-spacing:3px;margin-bottom:10px}
+.hero .htitle{position:relative;font-family:var(--pix);color:#fff;font-size:24px;text-shadow:1px 1px 0 #00214f;line-height:1.4}
+.sub{color:var(--mut);font-size:15px;margin:12px 0 20px}
+.meta{text-align:center;color:var(--mut);font-size:13px;margin-top:16px}
+.npc{display:flex;gap:12px;align-items:flex-start;background:var(--bg);
+  border:2px solid var(--line);border-radius:8px;padding:14px 16px;margin:18px 0}
+.npc .face{width:44px;height:44px;flex:none;image-rendering:pixelated;image-rendering:crisp-edges}
+.npc .say{font-size:15px}
+.npc .say b{font-family:var(--pix);font-size:12px;color:var(--blue);display:block;margin-bottom:3px;text-shadow:.4px 0 0 currentColor}
+.cushion{border-left:3px solid var(--red);background:#fff5f6;border-radius:0 6px 6px 0;
+  padding:14px 16px;font-size:14px;color:#7a2530;margin:16px 0;line-height:1.65}
+.btn{width:100%;border:3px solid var(--ink);border-radius:8px;padding:14px;cursor:pointer;
+  font-family:var(--pix);font-size:15px;text-shadow:.4px 0 0 currentColor;box-shadow:4px 4px 0 rgba(0,0,50,.15);transition:.1s}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 rgba(0,0,50,.15)}
+.btn.cta{background:var(--red);color:#fff;border-color:#c11a30}
+.btn.cta:disabled{background:#f3b8c1;border-color:#e8a3ae;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--blue)}
+.progress{display:flex;gap:6px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.progress i{width:20px;height:8px;border-radius:4px;background:var(--line);display:block}
+.progress i.on{background:var(--blue)}
+/* 질문 블록 */
+.qblock{padding:22px 0}
+.qblock+.qblock{border-top:1px solid var(--line)}
+.qblock.na{opacity:.5}
+.qblock.invalid .scale{outline:2px solid var(--red);outline-offset:5px;border-radius:12px}
+.q{font-size:18px;font-weight:600;margin:0 0 18px}
+.scale{display:flex;justify-content:space-between;gap:6px}
+.scale button{flex:1;border:2px solid var(--line);border-radius:10px;background:#fff;padding:12px 0;font-size:26px;cursor:pointer;transition:.12s}
+.scale button:hover{border-color:var(--blue)}
+.scale button.on{border-color:var(--blue);background:#eef4ff;transform:translateY(-3px)}
+.scale button span{display:block;font-family:var(--pix);font-size:12px;color:var(--mut);margin-top:4px}
+.anchor{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-top:8px}
+textarea{width:100%;border:2px solid var(--line);border-radius:8px;padding:12px;font-family:var(--sans);font-size:15px;resize:vertical;min-height:74px;margin-top:8px}
+textarea:focus{outline:none;border-color:var(--blue)}
+.stagebox{margin-top:22px;padding:16px;border:2px dashed var(--line);border-radius:10px;background:var(--bg)}
+.stagebox label{font-size:15px;font-weight:600;display:block}
+.stagebox.invalid{border-color:var(--red)}
+.followup{margin-top:16px;display:none}
+.followup.show{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.followup label{font-size:15px;font-weight:600;display:block}
+.dunno{display:block;text-align:center;font-size:13px;color:var(--mut);margin-top:12px;text-decoration:underline;cursor:pointer;background:none;border:none;width:100%}
+.dunno.on{color:var(--blue);font-weight:700}
+.warn{color:var(--red);font-size:13px;font-weight:600;text-align:center;margin-top:14px}
+.nav{display:flex;gap:10px;margin-top:20px}
+.nav .btn{flex:1}
+.hide{display:none}
+.done{text-align:center;padding:40px 24px}
+.done .big{font-size:44px}
+.gift{border:2px dashed var(--red);border-radius:8px;padding:14px;margin-top:20px;font-size:14px;color:#7a2530}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ── 인트로 ── -->
+  <section id="intro">
+    <div class="hero">
+      <span class="firefly" style="left:16%;top:28%"></span>
+      <span class="firefly" style="left:80%;top:60%;animation-delay:1.2s"></span>
+      <div class="wmark">RUSTIC TOWN · 삼기점</div>
+      <div class="htitle">포레스트캠프 리포트</div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">삼기점 포레스트캠프</div>
+      <h1 class="pix" style="margin-top:8px">소중한 이야기를 들려주세요</h1>
+      <p class="sub">이번 퀘스트를 되돌아보며 리포트를 남겨주세요.</p>
+      <div class="npc"><img class="face" src="townkeeper.png" alt="타운지기">
+        <div class="say"><b>타운지기</b>여러분이 어떻게 느끼셨는지 정말 궁금해요. 편하게, 5분이면 됩니다.</div></div>
+      <div class="cushion">🌱 러스틱타운 '삼기점'은 <b>이제 막 문을 연 지점</b>입니다. 아직 다듬어가는 중이라 아쉬운 부분이 있었을 텐데, <b>그 이야기까지 솔직하게</b> 들려주시면 더 좋은 경험이 될 수 있도록 반영할게요!</div>
+      <button class="btn cta" onclick="start()" style="margin-top:16px">리포트 작성하기</button>
+      <div class="meta">⏱ 약 3~5분 소요 &nbsp;|&nbsp; 🔒 익명 응답</div>
+    </div>
+  </section>
+
+  <!-- ── 문항 ── -->
+  <section id="quiz" class="hide">
+    <div class="progress" id="stamps"></div>
+    <div class="card">
+      <div class="stage-title" id="stageTitle"></div>
+      <div class="npc"><img class="face" src="townkeeper.png" alt="타운지기"><div class="say"><b>타운지기</b><span id="npcSay"></span></div></div>
+      <div id="questions"></div>
+      <div id="warn" class="warn hide"></div>
+      <div class="nav">
+        <button class="btn ghost" id="prevBtn" onclick="prev()">◀ 이전</button>
+        <button class="btn cta" id="nextBtn" onclick="next()">다음 ▶</button>
+      </div>
+    </div>
+    <div class="meta"><span id="stageNow">1</span> / <span id="stageTotal">5</span> · 🔒 익명</div>
+  </section>
+
+  <!-- ── 완료 ── -->
+  <section id="done" class="hide">
+    <div class="card done">
+      <div class="big">🎉</div>
+      <h1 class="pix" style="margin-top:10px">리포트가 완성됐어요</h1>
+      <p class="sub" style="margin-top:12px">여러분의 소중한 이야기가 잘 전달되었습니다.<br>더 나은 삼기점으로 보답하겠습니다.</p>
+      <div class="gift" id="giftBox" style="text-align:left">
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px">🎁 기프트 받는 방법</div>
+        <ol style="margin:0 0 14px 20px;padding:0;line-height:1.7">
+          <li><b>후기 남기기</b> 👉 <a href="https://www.rustictown.co.kr/logs" target="_blank" rel="noopener" style="color:var(--red);font-weight:700">리뷰 작성하러 가기 →</a><br>
+            <span style="font-size:13px;color:var(--mut)">로그인 후 작성 · 300자 이상 · 사진 1장 · 작성자명은 아래 성함과 같게</span></li>
+          <li><b>성함 남기기</b> — 운영진이 확인 후 기프트를 전달해 드려요</li>
+        </ol>
+        <input type="text" id="giftName" placeholder="성함을 입력해주세요" maxlength="30"
+          style="width:100%;border:2px solid var(--line);border-radius:8px;padding:12px;font-family:var(--sans);font-size:15px">
+        <button class="btn cta" id="giftBtn" onclick="submitGift()" style="margin-top:10px">신청하기</button>
+        <div id="giftWarn" class="warn hide"></div>
+        <div style="font-size:13px;color:var(--mut);margin-top:10px">제출하신 설문은 익명 처리되니 안심하세요.</div>
+      </div>
+      <div class="gift hide" id="giftDone" style="text-align:center">✅ <b>기프트 신청 완료!</b><br>후기까지 마치셨다면 아래 버튼으로 타운지기에게 알려주세요.
+        <button class="btn" onclick="shareKakao()" style="margin-top:14px;background:#FEE500;color:#191919;border-color:#d4c200">💬 타운지기에게 공유하기</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* 삼기 전용 제출 주소 — 워크빌리지와 같은 앱스스크립트, 탭만 FC응답/FC기프트로 분리
+   비워두면 전송 없이 완료 화면만 표시. 링크 끝에 ?test=1 을 붙이면 'FC테스트' 탭에 저장(실응답과 분리) */
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyI2pRgA71k6EGTBpzFIInMq2PalhMu-T-gIbPqepFoeBKJWkm15kT8ZPsI0enlXTYj/exec";
+const TEST_TAB = new URLSearchParams(location.search).has('test') ? 'FC테스트' : '';
+
+const EMO = {1:'😭',2:'😕',3:'😐',4:'😊',5:'🤩'};
+
+/* 포레스트캠프 1트랙 (개인 참가자). 회차는 묻지 않고 제출시각으로 판별 */
+const CONFIG = {
+  fc: { label:'포레스트캠프', stages:[
+    {title:'도착', npc:'삼기점에 처음 도착했을 때의 느낌, 기억나시나요?', questions:[
+      {id:'f_guide', col:'사전 안내', q:'도착 전 안내(오시는 길·셀프 체크인)는 충분했나요?', low:'부족했어요', high:'충분했어요'},
+      {id:'f_first', col:'첫인상', q:'도착했을 때 첫인상은 어땠나요?', low:'기대 이하', high:'기대 이상'},
+    ]},
+    {title:'머문 공간', npc:'머무신 공간들은 어떠셨나요?', questions:[
+      {id:'f_work',  col:'업무공간', q:'업무공간(몰입홀·협업홀·미팅룸·와이파이)은 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'f_stay',  col:'숙소', q:'숙소(침실·욕실·주방·세탁건조기)는 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'f_share', col:'함께 쓰기', q:'다른 참가자와 한 채를 함께 쓴 생활은 괜찮았나요?', low:'불편했어요', high:'편했어요', na:'A타입(한 채 단독)이라 해당 없어요'},
+    ]},
+    {title:'생활 & 경험', npc:'머무는 동안의 생활과 경험도 들려주세요.', questions:[
+      {id:'f_meal', col:'식사 해결', q:'식사 해결(숙소 주방·주변 식당·마트)은 편했나요?', low:'불편했어요', high:'편했어요'},
+      {id:'f_car',  col:'카셰어링', q:'카셰어링은 이용하기 편했나요?', low:'불편했어요', high:'편했어요', na:'이용하지 않았어요'},
+      {id:'f_prog', col:'프로그램', q:'프로그램은 어땠나요?', low:'아쉬웠어요', high:'좋았어요', na:'참여하지 않았어요'},
+      {id:'f_help', col:'타운지기 도움', q:'필요할 때 타운지기의 도움을 받을 수 있었나요?', low:'어려웠어요', high:'바로 해결됐어요', na:'요청할 일이 없었어요'},
+    ]},
+    {title:'이번 퀘스트', npc:'가져온 일은 잘 풀리셨나요?', questions:[
+      {id:'f_quest',  col:'퀘스트 달성', q:'가져온 일은 얼마나 해내셨나요?', low:'거의 못 했어요', high:'목표만큼 해냈어요', na:'일 없이 쉬러 왔어요'},
+      {id:'f_return', col:'재참여 의향', q:'다음에도 포레스트캠프에 참여하고 싶나요?', low:'다시 오긴 어려워요', high:'꼭 다시 올게요'},
+    ]},
+    {title:'전체 돌아보기', npc:'거의 다 왔어요! 마지막으로 전체를 돌아보며 한마디 남겨주세요.', questions:[
+      {id:'f_fix',  type:'text', required:true, col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
+      {id:'f_msg',  type:'text', col:'전하고 싶은 말', q:'러스틱타운에게 전하고 싶은 말', ph:'가장 좋았던 순간, 고마웠던 점 등 무엇이든 좋아요.'},
+    ]},
+  ]},
+};
+
+let role='fc', stageIdx=0, ans={}, stageText={};
+
+
+/* 아임웹 임베드: iframe 높이를 부모에 전달해 내부 스크롤 제거 */
+const EMBED = window.parent !== window;
+if (EMBED) {
+  document.body.style.minHeight = 'auto';
+  const postH = () => parent.postMessage({samgiH: document.body.scrollHeight + 40}, '*');
+  new ResizeObserver(postH).observe(document.body);
+  window.addEventListener('load', postH);
+}
+function goTop(){
+  if (EMBED) parent.postMessage({samgiTop: true}, '*');
+  window.scrollTo(0,0);
+}
+
+/* 서버 응답 {ok:true} 확인까지 해야 성공 — 실패 시 재시도 가능하도록 */
+function postJSON(payload){
+  return fetch(ENDPOINT,{method:'POST',body:JSON.stringify(payload)})
+    .then(r=>r.text()).then(t=>{ try{ return JSON.parse(t).ok===true; }catch(_){ return false; } });
+}
+
+/* 카카오 공유: 심청점과 동일한 앱 키 (같은 도메인 sz-source.github.io) */
+try { if (window.Kakao && !Kakao.isInitialized()) Kakao.init('0e51331132e9022a6e47f5ccc669c14d'); } catch(_){}
+function shareKakao(){
+  if(!window.Kakao || !Kakao.isInitialized()){ alert('카카오톡 공유를 불러오지 못했어요. 카톡으로 직접 알려주세요!'); return; }
+  Kakao.Share.sendDefault({
+    objectType:'text',
+    text:'포레스트캠프 리포트 제출 완료! ⭐\n입주민의 소중한 모험이 기록되었어요.',
+    link:{ mobileWebUrl:'https://www.rustictown.co.kr/logs', webUrl:'https://www.rustictown.co.kr/logs' },
+    buttonTitle:'입주민 이야기 둘러보기'
+  });
+}
+
+/* 기프트 신청: 응답과 분리된 '기프트' 탭에 이름만 저장 (익명성 유지) */
+function submitGift(){
+  const name=document.getElementById('giftName').value.trim();
+  const w=document.getElementById('giftWarn');
+  if(!name){ w.textContent='성함을 입력해주세요.'; w.classList.remove('hide'); return; }
+  w.classList.add('hide');
+  const btn=document.getElementById('giftBtn'); btn.disabled=true; btn.textContent='신청 중…';
+  const payload={ site:'삼기점', sheet:TEST_TAB||'FC기프트',
+    header:['신청시각','성함'],
+    row:[new Date().toISOString(), name] };
+  const done=()=>{ document.getElementById('giftBox').classList.add('hide');
+    document.getElementById('giftDone').classList.remove('hide'); };
+  const giftFail=()=>{ btn.disabled=false; btn.textContent='다시 신청하기'; w.textContent='전송에 실패했어요. 네트워크 확인 후 다시 시도해주세요.'; w.classList.remove('hide'); };
+  if(ENDPOINT){ postJSON(payload).then(ok=>ok?done():giftFail()).catch(giftFail); }
+  else done();
+}
+
+function start(){ stageIdx=0; ans={}; stageText={}; document.getElementById('intro').classList.add('hide');
+  document.getElementById('quiz').classList.remove('hide'); renderStage(); goTop(); }
+
+function renderStage(){
+  const T=CONFIG[role], st=T.stages[stageIdx];
+  document.getElementById('stageTitle').textContent=st.title;
+  document.getElementById('npcSay').textContent=st.npc;
+  document.getElementById('stageNow').textContent=stageIdx+1;
+  document.getElementById('stageTotal').textContent=T.stages.length;
+  const s=document.getElementById('stamps'); s.innerHTML='';
+  T.stages.forEach((_,i)=>{const b=document.createElement('i'); if(i<=stageIdx)b.className='on'; s.appendChild(b);});
+  const c=document.getElementById('questions'); c.innerHTML='';
+  const scaleQs=st.questions.filter(q=>q.type!=='text');
+  // 1) 척도 문항
+  scaleQs.forEach(q=>{
+    const a=ans[q.id]||(ans[q.id]={});
+    const box=document.createElement('div'); box.className='qblock'+(a.na?' na':''); box.id='qb-'+q.id;
+    const emo=[1,2,3,4,5].map(v=>`<button data-v="${v}" class="${a.score===v?'on':''}" onclick="pickScore('${q.id}',${v},this)">${EMO[v]}<span>${v}</span></button>`).join('');
+    box.innerHTML=`<div class="q">${q.q}</div>
+      <div class="scale">${emo}</div>
+      <div class="anchor"><span>${q.low}</span><span>${q.high}</span></div>
+      ${q.na?`<button class="dunno ${a.na?'on':''}" data-na="${q.na}" onclick="toggleNA('${q.id}',this)">${a.na?'✓ '+q.na:q.na+' →'}</button>`:''}`;
+    c.appendChild(box);
+  });
+  // 2) 스테이지 서술 1칸 (필수) — 가장 낮게 준 항목을 부드럽게 지목
+  if(scaleQs.length){
+    const sb=document.createElement('div'); sb.className='stagebox'; sb.id='stagebox';
+    sb.innerHTML=`<label id="stageLabel"></label>
+      <textarea placeholder="비품·소음·안내 등 작은 불편이나 바라는 점도 좋아요." oninput="setStageText(this.value)">${stageText[stageIdx]||''}</textarea>`;
+    c.appendChild(sb); updateStagePrompt();
+  }
+  // 3) 마지막 서술 문항 (꼭 바뀌었으면만 필수)
+  st.questions.filter(q=>q.type==='text').forEach(q=>{
+    const a=ans[q.id]||(ans[q.id]={});
+    const box=document.createElement('div'); box.className='qblock'; box.id='qb-'+q.id;
+    box.innerHTML=`<div class="q">${q.q}${q.required?'':' <span style="font-size:13px;color:var(--mut);font-weight:400">(선택)</span>'}</div>
+      <textarea placeholder="${q.ph||(q.required?'꼭 한 가지만이라도 적어주세요.':'자유롭게 적어주세요.')}" oninput="setText('${q.id}',this.value)">${a.text||''}</textarea>`;
+    c.appendChild(box);
+  });
+  document.getElementById('prevBtn').textContent = stageIdx===0 ? '◀ 처음으로' : '◀ 이전';
+  document.getElementById('nextBtn').textContent = stageIdx===T.stages.length-1 ? '제출하기 ✅' : '다음 ▶';
+  clearWarn();
+}
+
+/* 스테이지에서 가장 낮게 준 항목 (NA 제외). 전부 동점이면 null */
+function lowestItems(st){
+  const qs=st.questions.filter(q=>q.type!=='text'&&ans[q.id]&&!ans[q.id].na&&ans[q.id].score);
+  if(!qs.length) return {items:[],allEqual:true,lo:null,n:0};
+  const lo=Math.min(...qs.map(q=>ans[q.id].score));
+  const lows=qs.filter(q=>ans[q.id].score===lo);
+  return {items:lows, allEqual: lows.length===qs.length && qs.length>1, lo, n:qs.length};
+}
+/* 프롬프트: 낮은 점수엔 '아쉬운 점', 높은 점수엔 '좋았던 점·바람' — 없는 불만을 지어내지 않게 */
+function updateStagePrompt(){
+  const L=document.getElementById('stageLabel'); if(!L) return;
+  const {items,allEqual,lo,n}=lowestItems(CONFIG[role].stages[stageIdx]);
+  const others = n>1 ? ' (다른 항목도 좋아요)' : '';
+  if(!items.length) L.textContent='💬 점수를 모두 고르신 뒤, 한 줄 남겨주세요.';
+  else if(allEqual) L.textContent = lo>=4 ? '💬 모두 좋으셨네요! 특히 좋았던 점이나, 작은 바람이 있다면?'
+                                          : '💬 이 중 아쉬웠던 점이 있다면?';
+  else { const name=items.slice(0,2).map(q=>q.col).join('·');
+    L.textContent = lo>=4 ? `💬 '${name}'에서 특히 좋았던 점이나, 바라는 점이 있다면?${others}`
+                          : `💬 '${name}'에 대해 아쉬웠던 점이 있다면?${others}`; }
+}
+function setStageText(v){ stageText[stageIdx]=v; document.getElementById('stagebox').classList.remove('invalid'); clearWarn(); }
+
+function pickScore(id,v,btn){
+  const a=ans[id]||(ans[id]={}); a.score=v; a.na=false;
+  const box=btn.closest('.qblock'); box.classList.remove('na','invalid');
+  box.querySelectorAll('.scale button').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  const na=box.querySelector('.dunno'); if(na){na.classList.remove('on'); na.textContent=na.dataset.na+' →';}
+  updateStagePrompt(); clearWarn();
+}
+function setText(id,val){ (ans[id]||(ans[id]={})).text=val; clearWarn(); }
+function toggleNA(id,link){
+  const a=ans[id]||(ans[id]={}); a.na=!a.na;
+  const box=link.closest('.qblock'); box.classList.remove('invalid');
+  if(a.na){ link.classList.add('on'); link.textContent='✓ '+link.dataset.na;
+    box.classList.add('na'); box.querySelectorAll('.scale button').forEach(b=>b.classList.remove('on')); a.score=null; }
+  else { link.classList.remove('on'); link.textContent=link.dataset.na+' →'; box.classList.remove('na'); }
+  updateStagePrompt(); clearWarn();
+}
+function warn(msg){const w=document.getElementById('warn'); w.textContent=msg; w.classList.remove('hide');}
+function clearWarn(){document.getElementById('warn').classList.add('hide');}
+
+/* 검증: 점수 필수(NA 허용) · 스테이지 서술 필수 · 마지막은 '꼭 바뀌었으면'만 필수. '이전'은 검증 없음 */
+function next(){
+  const T=CONFIG[role], st=T.stages[stageIdx];
+  // 화면 순서대로 검증: 점수 → 스테이지 서술 → 마지막 서술
+  for(const q of st.questions){ const a=ans[q.id]||{};
+    if(q.type!=='text' && !a.na && !a.score) return fail(q,'응답을 선택해주세요 🙂'); }
+  if(st.questions.some(q=>q.type!=='text') && !(stageText[stageIdx]||'').trim()){
+    warn('한 줄만 남겨주시면 큰 도움이 됩니다.');
+    const sb=document.getElementById('stagebox'); sb.classList.add('invalid'); sb.scrollIntoView({block:'center',behavior:'smooth'}); return;
+  }
+  for(const q of st.questions){ const a=ans[q.id]||{};
+    if(q.type==='text' && q.required && !(a.text&&a.text.trim())) return fail(q,'이것만은 꼭 한 가지 적어주세요 🙏'); }
+  if(stageIdx===T.stages.length-1) submit();
+  else { stageIdx++; renderStage(); goTop(); }
+}
+function fail(q,msg){ warn(msg); const el=document.getElementById('qb-'+q.id);
+  el.classList.add('invalid'); el.scrollIntoView({block:'center',behavior:'smooth'}); }
+function prev(){ clearWarn();
+  if(stageIdx===0){ document.getElementById('quiz').classList.add('hide'); document.getElementById('intro').classList.remove('hide'); }
+  else { stageIdx--; renderStage(); }
+  goTop();
+}
+
+/* 제출: 스테이지 서술은 가장 낮게 준 항목의 '○○ 서술' 컬럼에 저장 (동점이면 첫 항목) → 시트·대시보드 구조 그대로 */
+function submit(){
+  const T=CONFIG[role];
+  const header=['제출시각'], row=[new Date().toISOString()];
+  T.stages.forEach((st,si)=>{
+    const {items}=lowestItems(st);
+    const scaleQs=st.questions.filter(q=>q.type!=='text');
+    const target=(items[0]||scaleQs[0]||{}).id;
+    st.questions.forEach(q=>{
+      const a=ans[q.id]||{};
+      if(q.type==='text'){ header.push(q.col); row.push(a.text||''); }
+      else{ header.push(q.col+' 점수', q.col+' 서술');
+        row.push(a.na?'해당없음':(a.score||''), q.id===target?(stageText[si]||''):''); }
+    });
+  });
+  const payload={ site:'삼기점', sheet:TEST_TAB||'FC응답', header, row };
+  const btn=document.getElementById('nextBtn'); btn.disabled=true; btn.textContent='제출 중…';
+  const finish=()=>{ document.getElementById('quiz').classList.add('hide');
+    document.getElementById('done').classList.remove('hide'); goTop(); };
+  const fail=()=>{ btn.disabled=false; btn.textContent='다시 제출하기 ▶'; warn('전송에 실패했어요. 네트워크 확인 후 다시 시도해주세요.'); };
+  if(ENDPOINT){ postJSON(payload).then(ok=>ok?finish():fail()).catch(fail); }
+  else { finish(); }
+}
+</script>
+</body>
+</html>
