@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>러스틱타운 워크빌리지 피드백 대시보드</title>
+<title>러스틱타운 삼기점 피드백 대시보드</title>
 <style>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -75,9 +75,13 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
 <div class="wrap">
   <div class="header">
     <div>
-      <div class="title">📊 워크빌리지 피드백 대시보드</div>
+      <div class="title" id="dashTitle">📊 워크빌리지 피드백 대시보드</div>
     </div>
     <div class="filters">
+      <div class="seg" id="progSeg">
+        <button data-p="wv" onclick="setProg('wv')">워크빌리지</button>
+        <button data-p="fc" onclick="setProg('fc')">포레스트캠프</button>
+      </div>
       <div class="seg" id="trackSeg">
         <button class="active" data-t="all" onclick="setTrack('all',this)">전체</button>
         <button data-t="담당자" onclick="setTrack('담당자',this)">담당자</button>
@@ -89,6 +93,10 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
         <option value="정식">정식 응답</option>
         <option value="파일럿">파일럿</option>
       </select>
+      <select id="roundSel" onchange="apply()"
+        style="display:none;font-family:inherit;font-size:15px;padding:7px 10px;border:2px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
+        <option value="">전체 회차</option>
+      </select>
       <label style="font-size:13px;color:var(--dim);display:flex;align-items:center;gap:4px">기간
         <input type="date" id="dFrom" onchange="apply()" style="font-family:inherit;font-size:14px;padding:5px 8px;border:2px solid var(--border);border-radius:6px;background:var(--card);color:var(--text)">
         ~
@@ -98,7 +106,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
       <button class="btn-download" onclick="downloadCSV()">CSV ⬇</button>
     </div>
   </div>
-  <div class="eyebrow">삼기점 워크빌리지 · 피드백</div>
+  <div class="eyebrow" id="dashEyebrow">삼기점 워크빌리지 · 피드백</div>
 
   <div class="summary">
     <div class="stat"><div class="stat-label">총 응답 수</div><div class="stat-value" id="totalCount">0</div>
@@ -123,15 +131,30 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbyI2pRgA71k6EGTBpzFIInMq2PalhMu-T-gIbPqepFoeBKJWkm15kT8ZPsI0enlXTYj/exec";
 const OPEN_COLS = ['가장 좋았던 순간','꼭 바뀌었으면','전하고 싶은 말'];
 const OPEN_META = {'가장 좋았던 순간':{icon:'⭐'},'꼭 바뀌었으면':{icon:'🔧'},'전하고 싶은 말':{icon:'💬'}};
-const AREA_ICON = {'문의·예약 응대':'📨','사전 일정 설계':'🗓️','첫인상':'🚪','업무 공간':'💻','업무공간':'💻','숙소':'🏠','라운지':'☕','대규모 동선':'🧭','식사 환경':'🍽️','식사 해결':'🍽️','체류 중 대응':'💬','현장 안내':'📍','몰입 환경':'🧘','위스피릿 체험':'🥃','목적 달성':'🎯','비용 대비 가치':'💰','재이용 의향':'🔄','재방문 의향':'🔄'};
+const AREA_ICON = {'문의·예약 응대':'📨','사전 일정 설계':'🗓️','첫인상':'🚪','업무 공간':'💻','업무공간':'💻','숙소':'🏠','라운지':'☕','대규모 동선':'🧭','식사 환경':'🍽️','식사 해결':'🍽️','체류 중 대응':'💬','현장 안내':'📍','몰입 환경':'🧘','위스피릿 체험':'🥃','목적 달성':'🎯','비용 대비 가치':'💰','재이용 의향':'🔄','재방문 의향':'🔄',
+  '사전 안내':'📋','함께 쓰기':'🤝','카셰어링':'🚗','프로그램':'🎪','타운지기 도움':'🙋','퀘스트 달성':'🎯','재참여 의향':'🔄'};
+
+/* 포레스트캠프 회차 = 예약관리 앱과 같은 일정. 응답의 제출일(한국시간)로 판별: 시작일 ~ 다음 회차 시작 전날
+   ponytail: 새 회차가 열리면 여기에 한 줄 추가 (마지막 회차 뒤 제출은 모두 마지막 회차로 잡힘) */
+const FC_ROUNDS = [
+  ['2026-09-28','첫 줄만 쓰면'], ['2026-10-05','마지막 10%'], ['2026-10-12','처음부터 다시'],
+  ['2026-10-19','아무도 안 부르는'], ['2026-10-26','3주째 그 파일'], ['2026-11-02','딴짓 없이'],
+  ['2026-11-09','한 번에 이어서'], ['2026-11-16','혼자선 안 되더라'], ['2026-11-23','언젠가 만들려던 것'],
+  ['2026-12-07','올해 안에'], ['2026-12-14','연초에 안 밀리려고'],
+];
+function roundOf(d){ let n=''; FC_ROUNDS.forEach(([s,name])=>{ if(d>=s) n=name; }); return n; }
 
 function esc(s){const d=document.createElement('div');d.textContent=(s==null?'':String(s));return d.innerHTML;}
-function dateOf(r){return String(r['제출시각']||'').split('T')[0];}
+/* 제출시각(UTC) → 한국 날짜 (오전 9시 전 제출이 전날로 잡히지 않게) */
+function dateOf(r){const s=r['제출시각'],t=new Date(s);return isNaN(t)?String(s||'').split('T')[0]:new Date(t.getTime()+9*36e5).toISOString().slice(0,10);}
 function trackOf(r){return r._track||r['역할']||'';}
+/* 코멘트 아래 표시: 워크빌리지=역할 배지, 포레스트캠프=판별된 회차 */
+function metaOf(i){return prog==='fc'?esc(roundOf(i.date)||'회차 미상')+' · '+i.date
+  :`<span class="badge ${i.track==='담당자'?'badge-l':'badge-m'}">${i.track}</span> · ${i.date}`;}
 function tierClass(a){return a>=4?'score-high':a>=3?'score-mid':'score-low';}
 function tierColor(a){return a>=4?'var(--green)':a>=3?'var(--orange)':'var(--red)';}
 
-let all=[], filtered=[], track='all';
+let all=[], filtered=[], track='all', loaded=false, prog=new URLSearchParams(location.search).get('p')==='fc'?'fc':'wv';
 
 function getKey(){
   let k=null; try{ k=sessionStorage.getItem('samgiKey'); }catch(_){}
@@ -142,24 +165,37 @@ function load(){
   const key=getKey(); if(!key){ document.getElementById('areaList').innerHTML='<div class="no-comments">비밀번호가 필요합니다. 새로고침 후 입력해주세요.</div>'; return; }
   fetch(ENDPOINT+'?key='+encodeURIComponent(key)).then(r=>r.json()).then(d=>{
     if(d&&d.error==='unauthorized'){ try{ sessionStorage.removeItem('samgiKey'); }catch(_){} alert('비밀번호가 올바르지 않습니다.'); location.reload(); return; }
-    const tag=(rows,tr,src)=>(rows||[]).map(r=>Object.assign({_track:tr,_src:src},r));
+    const tag=(rows,tr,src,p)=>(rows||[]).map(r=>Object.assign({_track:tr,_src:src,_prog:p||'wv'},r));
     all=[].concat(
       tag(d['담당자'],'담당자','파일럿'), tag(d['참여자'],'참여자','파일럿'),
-      tag(d['WV담당자'],'담당자','정식'), tag(d['WV참여자'],'참여자','정식'));
-    apply();
+      tag(d['WV담당자'],'담당자','정식'), tag(d['WV참여자'],'참여자','정식'),
+      tag(d['FC응답'],'참여자','정식','fc'));
+    loaded=true; apply();
   }).catch(e=>{
     document.getElementById('areaList').innerHTML='<div class="no-comments">데이터를 불러오지 못했습니다. ('+esc(e.message)+')</div>';
   });
 }
+function setProg(p){
+  prog=p; const fc=p==='fc', name=fc?'포레스트캠프':'워크빌리지';
+  document.querySelectorAll('#progSeg button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  document.getElementById('dashTitle').textContent='📊 '+name+' 피드백 대시보드';
+  document.getElementById('dashEyebrow').textContent='삼기점 '+name+' · 피드백'+(fc?' · 회차는 제출일로 자동 판별':'');
+  document.getElementById('trackSeg').style.display=fc?'none':'';
+  document.getElementById('srcSel').style.display=fc?'none':'';
+  document.getElementById('roundSel').style.display=fc?'':'none';
+  if(loaded) apply();
+}
 function setTrack(t,btn){track=t;document.querySelectorAll('#trackSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');apply();}
 function clearDates(){document.getElementById('dFrom').value='';document.getElementById('dTo').value='';apply();}
 function apply(){
-  const src=document.getElementById('srcSel').value;
+  const src=document.getElementById('srcSel').value, round=document.getElementById('roundSel').value;
   const f=document.getElementById('dFrom').value, t=document.getElementById('dTo').value;
   filtered=all.filter(r=>{
-    if(track!=='all'&&trackOf(r)!==track) return false;
-    if(src!=='all'&&r._src!==src) return false;
+    if(r._prog!==prog) return false;
+    if(prog==='wv'&&track!=='all'&&trackOf(r)!==track) return false;
+    if(prog==='wv'&&src!=='all'&&r._src!==src) return false;
     const d=dateOf(r);
+    if(prog==='fc'&&round&&roundOf(d)!==round) return false;
     if(f&&d<f) return false;
     if(t&&d>t) return false;
     return true;
@@ -185,8 +221,11 @@ function commentsOf(area){
 
 function render(){
   document.getElementById('totalCount').textContent=filtered.length;
-  const nL=all.filter(r=>trackOf(r)==='담당자').length, nM=all.filter(r=>trackOf(r)==='참여자').length;
-  document.getElementById('trackBreak').textContent='담당자 '+nL+' · 참여자 '+nM;
+  const mine=all.filter(r=>r._prog===prog);
+  const nL=mine.filter(r=>trackOf(r)==='담당자').length, nM=mine.filter(r=>trackOf(r)==='참여자').length;
+  document.getElementById('trackBreak').textContent = prog==='fc'
+    ? new Set(mine.map(r=>roundOf(dateOf(r))).filter(Boolean)).size+'개 회차'
+    : '담당자 '+nL+' · 참여자 '+nM;
 
   if(!filtered.length){
     document.getElementById('totalAvg').textContent='-';
@@ -224,11 +263,11 @@ function render(){
     </div>`;
   }).join('');
 
-  document.getElementById('openList').innerHTML = OPEN_COLS.map(col=>{
+  document.getElementById('openList').innerHTML = OPEN_COLS.filter(col=>prog==='wv'||col!=='가장 좋았던 순간').map(col=>{
     const items=filtered.map(r=>({text:r[col],track:trackOf(r),date:dateOf(r)})).filter(i=>i.text&&String(i.text).trim());
     return `<div class="open-section">
       <div class="open-title">${(OPEN_META[col]||{}).icon||'💬'} ${esc(col)} <span class="open-count">(${items.length}건)</span></div>
-      <div class="open-list">${items.length?items.map(i=>`<div class="open-item">${esc(i.text)}<div class="open-meta"><span class="badge ${i.track==='담당자'?'badge-l':'badge-m'}">${i.track}</span> · ${i.date}</div></div>`).join(''):'<div class="no-comments">응답 없음</div>'}</div>
+      <div class="open-list">${items.length?items.map(i=>`<div class="open-item">${esc(i.text)}<div class="open-meta">${metaOf(i)}</div></div>`).join(''):'<div class="no-comments">응답 없음</div>'}</div>
     </div>`;
   }).join('');
   document.getElementById('openCount').textContent=filtered.length+'건';
@@ -243,7 +282,7 @@ function renderC(cm,tier){
   return list.map(c=>{
     const cls=c.score<=2?'cs-low':c.score<=4?'cs-mid':'cs-high';
     return `<div class="comment-item"><div class="comment-score ${cls}">${c.score||'-'}점</div>
-      <div><div class="comment-text">${esc(c.text)}</div><div class="comment-meta"><span class="badge ${c.track==='담당자'?'badge-l':'badge-m'}">${c.track}</span> · ${c.date}</div></div></div>`;
+      <div><div class="comment-text">${esc(c.text)}</div><div class="comment-meta">${metaOf(c)}</div></div></div>`;
   }).join('');
 }
 function toggleArea(a){document.getElementById('area-'+a).classList.toggle('open');}
@@ -254,16 +293,20 @@ function filterC(a,tier,btn){
 }
 function downloadCSV(){
   if(!filtered.length)return alert('내보낼 데이터가 없습니다.');
-  const cols=Object.keys(filtered.reduce((a,r)=>Object.assign(a,r),{})).filter(k=>k!=='_track');
-  const head=['역할',...cols];
+  const fc=prog==='fc';
+  const cols=Object.keys(filtered.reduce((a,r)=>Object.assign(a,r),{})).filter(k=>k!=='_track'&&k!=='_prog'&&!(fc&&k==='_src'));
+  const head=[fc?'회차':'역할',...cols];
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=filtered.map(r=>[trackOf(r),...cols.map(c=>r[c])].map(q).join(','));
+  const rows=filtered.map(r=>[fc?roundOf(dateOf(r)):trackOf(r),...cols.map(c=>r[c])].map(q).join(','));
   const csv='﻿'+[head.map(q).join(','),...rows].join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download='삼기점-피드백-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.download='삼기점-'+(fc?'포레스트캠프-':'')+'피드백-'+new Date().toISOString().split('T')[0]+'.csv';
   a.click();URL.revokeObjectURL(a.href);
 }
+document.getElementById('roundSel').insertAdjacentHTML('beforeend',
+  FC_ROUNDS.map(([s,n])=>`<option value="${esc(n)}">${esc(n)} (${+s.slice(5,7)}/${+s.slice(8)}~)</option>`).join(''));
+setProg(prog);
 load();
 </script>
 </body>
