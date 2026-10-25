@@ -81,6 +81,7 @@ body{font-family:'Pretendard',sans-serif;background:var(--bg);color:var(--text);
       <div class="seg" id="progSeg">
         <button data-p="wv" onclick="setProg('wv')">워크빌리지</button>
         <button data-p="fc" onclick="setProg('fc')">포레스트캠프</button>
+        <button data-p="ppogak" onclick="setProg('ppogak')">뽀각캠프</button>
       </div>
       <div class="seg" id="trackSeg">
         <button class="active" data-t="all" onclick="setTrack('all',this)">전체</button>
@@ -144,17 +145,17 @@ const FC_ROUNDS = [
 ];
 function roundOf(d){ let n=''; FC_ROUNDS.forEach(([s,name])=>{ if(d>=s) n=name; }); return n; }
 
-function esc(s){const d=document.createElement('div');d.textContent=(s==null?'':String(s));return d.innerHTML;}
+function esc(s){const d=document.createElement('div');d.textContent=(s==null?'':String(s));return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 /* 제출시각(UTC) → 한국 날짜 (오전 9시 전 제출이 전날로 잡히지 않게) */
 function dateOf(r){const s=r['제출시각'],t=new Date(s);return isNaN(t)?String(s||'').split('T')[0]:new Date(t.getTime()+9*36e5).toISOString().slice(0,10);}
 function trackOf(r){return r._track||r['역할']||'';}
 /* 코멘트 아래 표시: 워크빌리지=역할 배지, 포레스트캠프=판별된 회차 */
-function metaOf(i){return prog==='fc'?esc(roundOf(i.date)||'회차 미상')+' · '+i.date
+function metaOf(i){return prog==='ppogak'?esc(i.round||'미지정')+' · '+esc(i.date):prog==='fc'?esc(roundOf(i.date)||'회차 미상')+' · '+i.date
   :`<span class="badge ${i.track==='담당자'?'badge-l':'badge-m'}">${i.track}</span> · ${i.date}`;}
 function tierClass(a){return a>=4?'score-high':a>=3?'score-mid':'score-low';}
 function tierColor(a){return a>=4?'var(--green)':a>=3?'var(--orange)':'var(--red)';}
 
-let all=[], filtered=[], track='all', loaded=false, prog=new URLSearchParams(location.search).get('p')==='fc'?'fc':'wv';
+let all=[], filtered=[], track='all', loaded=false, prog=['fc','ppogak'].includes(new URLSearchParams(location.search).get('p'))?new URLSearchParams(location.search).get('p'):'wv';
 
 function getKey(){
   let k=null; try{ k=sessionStorage.getItem('samgiKey'); }catch(_){}
@@ -169,20 +170,22 @@ function load(){
     all=[].concat(
       tag(d['담당자'],'담당자','파일럿'), tag(d['참여자'],'참여자','파일럿'),
       tag(d['WV담당자'],'담당자','정식'), tag(d['WV참여자'],'참여자','정식'),
-      tag(d['FC응답'],'참여자','정식','fc'));
+      tag(d['FC응답'],'참여자','정식','fc'), tag(d['뽀각응답'],'참여자','정식','ppogak'));
+    if(prog==='ppogak')updateRoundOptions();
     loaded=true; apply();
   }).catch(e=>{
     document.getElementById('areaList').innerHTML='<div class="no-comments">데이터를 불러오지 못했습니다. ('+esc(e.message)+')</div>';
   });
 }
 function setProg(p){
-  prog=p; const fc=p==='fc', name=fc?'포레스트캠프':'워크빌리지';
+  prog=p; const fc=p==='fc', name=p==='ppogak'?'뽀각캠프':fc?'포레스트캠프':'워크빌리지';
   document.querySelectorAll('#progSeg button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
   document.getElementById('dashTitle').textContent='📊 '+name+' 피드백 대시보드';
   document.getElementById('dashEyebrow').textContent='삼기점 '+name+' · 피드백'+(fc?' · 회차는 제출일로 자동 판별':'');
-  document.getElementById('trackSeg').style.display=fc?'none':'';
-  document.getElementById('srcSel').style.display=fc?'none':'';
-  document.getElementById('roundSel').style.display=fc?'':'none';
+  document.getElementById('trackSeg').style.display=p!=='wv'?'none':'';
+  document.getElementById('srcSel').style.display=p!=='wv'?'none':'';
+  document.getElementById('roundSel').style.display=p!=='wv'?'':'none';
+  updateRoundOptions();
   if(loaded) apply();
 }
 function setTrack(t,btn){track=t;document.querySelectorAll('#trackSeg button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');apply();}
@@ -195,7 +198,7 @@ function apply(){
     if(prog==='wv'&&track!=='all'&&trackOf(r)!==track) return false;
     if(prog==='wv'&&src!=='all'&&r._src!==src) return false;
     const d=dateOf(r);
-    if(prog==='fc'&&round&&roundOf(d)!==round) return false;
+    if(prog!=='wv'&&round&&(prog==='ppogak'?(r['기수']||'미지정'):roundOf(d))!==round) return false;
     if(f&&d<f) return false;
     if(t&&d>t) return false;
     return true;
@@ -215,7 +218,7 @@ function scoresOf(area){
   return filtered.map(r=>Number(r[area+' 점수'])).filter(v=>v>=1&&v<=5);
 }
 function commentsOf(area){
-  return filtered.map(r=>({score:Number(r[area+' 점수']),text:r[area+' 서술'],track:trackOf(r),date:dateOf(r)}))
+  return filtered.map(r=>({score:Number(r[area+' 점수']),text:r[area+' 서술'],track:trackOf(r),date:dateOf(r),round:r['기수']}))
                  .filter(c=>c.text&&String(c.text).trim());
 }
 
@@ -223,7 +226,7 @@ function render(){
   document.getElementById('totalCount').textContent=filtered.length;
   const mine=all.filter(r=>r._prog===prog);
   const nL=mine.filter(r=>trackOf(r)==='담당자').length, nM=mine.filter(r=>trackOf(r)==='참여자').length;
-  document.getElementById('trackBreak').textContent = prog==='fc'
+  document.getElementById('trackBreak').textContent = prog==='ppogak' ? new Set(mine.map(r=>r['기수']||'미지정')).size+'개 기수' : prog==='fc'
     ? new Set(mine.map(r=>roundOf(dateOf(r))).filter(Boolean)).size+'개 회차'
     : '담당자 '+nL+' · 참여자 '+nM;
 
@@ -263,13 +266,17 @@ function render(){
     </div>`;
   }).join('');
 
-  document.getElementById('openList').innerHTML = OPEN_COLS.filter(col=>prog==='wv'||col!=='가장 좋았던 순간').map(col=>{
-    const items=filtered.map(r=>({text:r[col],track:trackOf(r),date:dateOf(r)})).filter(i=>i.text&&String(i.text).trim());
+  document.getElementById('openList').innerHTML = (prog==='ppogak'?['도착 의견','머문 공간 의견','생활과 경험 의견','이번 뽀각 의견','꼭 바뀌었으면','전하고 싶은 말']:OPEN_COLS.filter(col=>prog==='wv'||col!=='가장 좋았던 순간')).map(col=>{
+    const items=filtered.map(r=>({text:r[col],track:trackOf(r),date:dateOf(r),round:r['기수']})).filter(i=>i.text&&String(i.text).trim());
     return `<div class="open-section">
       <div class="open-title">${(OPEN_META[col]||{}).icon||'💬'} ${esc(col)} <span class="open-count">(${items.length}건)</span></div>
       <div class="open-list">${items.length?items.map(i=>`<div class="open-item">${esc(i.text)}<div class="open-meta">${metaOf(i)}</div></div>`).join(''):'<div class="no-comments">응답 없음</div>'}</div>
     </div>`;
   }).join('');
+  if(prog==='ppogak'){
+    const blocks=['결과물 단계','멘토링 도움 응답구분'].map(col=>{const counts={};filtered.forEach(r=>{const v=r[col];if(v&&v!=='점수 응답')counts[v]=(counts[v]||0)+1;});return '<div class="open-section"><div class="open-title">'+esc(col)+'</div>'+Object.entries(counts).map(([k,n])=>'<div class="open-item">'+esc(k)+' · '+n+'명</div>').join('')+'</div>';}).join('');
+    document.getElementById('areaList').insertAdjacentHTML('beforeend',blocks);
+  }
   document.getElementById('openCount').textContent=filtered.length+'건';
 }
 
@@ -293,19 +300,22 @@ function filterC(a,tier,btn){
 }
 function downloadCSV(){
   if(!filtered.length)return alert('내보낼 데이터가 없습니다.');
-  const fc=prog==='fc';
+  const fc=prog!=='wv';
   const cols=Object.keys(filtered.reduce((a,r)=>Object.assign(a,r),{})).filter(k=>k!=='_track'&&k!=='_prog'&&!(fc&&k==='_src'));
   const head=[fc?'회차':'역할',...cols];
   const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-  const rows=filtered.map(r=>[fc?roundOf(dateOf(r)):trackOf(r),...cols.map(c=>r[c])].map(q).join(','));
+  const rows=filtered.map(r=>[prog==='ppogak'?(r['기수']||'미지정'):fc?roundOf(dateOf(r)):trackOf(r),...cols.map(c=>r[c])].map(q).join(','));
   const csv='﻿'+[head.map(q).join(','),...rows].join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download='삼기점-'+(fc?'포레스트캠프-':'')+'피드백-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.download='삼기점-'+(prog==='ppogak'?'뽀각캠프-':fc?'포레스트캠프-':'')+'피드백-'+new Date().toISOString().split('T')[0]+'.csv';
   a.click();URL.revokeObjectURL(a.href);
 }
-document.getElementById('roundSel').insertAdjacentHTML('beforeend',
-  FC_ROUNDS.map(([s,n])=>`<option value="${esc(n)}">${esc(n)} (${+s.slice(5,7)}/${+s.slice(8)}~)</option>`).join(''));
+function updateRoundOptions(){
+ const select=document.getElementById('roundSel');
+ const options=prog==='ppogak'?[...new Set(all.filter(r=>r._prog==='ppogak').map(r=>r['기수']||'미지정'))].map(n=>`<option value="${esc(n)}">${esc(n)}</option>`):FC_ROUNDS.map(([s,n])=>`<option value="${esc(n)}">${esc(n)} (${+s.slice(5,7)}/${+s.slice(8)}~)</option>`);
+ select.innerHTML='<option value="">전체 회차</option>'+options.join('');
+}
 setProg(prog);
 load();
 </script>

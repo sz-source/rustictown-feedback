@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>러스틱타운 삼기점 · 뽀각캠프 리포트</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/quiple/galmuri/dist/galmuri.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+/* ── 삼기 팔레트 = 러스틱타운 DESIGN.md SSOT ── */
+:root{
+  --blue:#00327a; --red:#ff2746; --ink:#222; --mut:#7A828C;
+  --line:#E6E8EC; --paper:#fff; --bg:#f7f9fc;
+  --pix:'Galmuri11','Galmuri14',monospace; --sans:'Pretendard',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;
+  min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
+.wrap{width:100%;max-width:600px}
+.pix{font-family:var(--pix);letter-spacing:.5px}
+h1.pix{font-size:22px;color:var(--blue);text-shadow:1px 0 0 currentColor;line-height:1.5}
+.stage-title{font-family:var(--pix);font-size:16px;color:var(--blue);text-shadow:.6px 0 0 currentColor}
+.eyebrow{font-size:13px;font-weight:700;color:var(--mut);letter-spacing:.5px}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:8px;
+  box-shadow:5px 5px 0 rgba(0,0,50,.10);padding:28px 24px}
+.hero{position:relative;border:3px solid var(--ink);border-radius:8px;overflow:hidden;
+  background:linear-gradient(135deg,#00214f,#00327a 60%,#0a4a9e);margin-bottom:-14px;
+  padding:34px 24px 40px;text-align:center;box-shadow:5px 5px 0 rgba(0,0,50,.10)}
+.hero .firefly{position:absolute;width:5px;height:5px;border-radius:50%;background:#ffe98a;
+  box-shadow:0 0 8px 2px #ffe98a99;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-8px);opacity:.9}}
+.hero .wmark{position:relative;font-family:var(--pix);color:#ffe98a;font-size:11px;letter-spacing:3px;margin-bottom:10px}
+.hero .htitle{position:relative;font-family:var(--pix);color:#fff;font-size:24px;text-shadow:1px 1px 0 #00214f;line-height:1.4}
+.sub{color:var(--mut);font-size:15px;margin:12px 0 20px}
+.meta{text-align:center;color:var(--mut);font-size:13px;margin-top:16px}
+.npc{display:flex;gap:12px;align-items:flex-start;background:var(--bg);
+  border:2px solid var(--line);border-radius:8px;padding:14px 16px;margin:18px 0}
+.npc .face{width:44px;height:44px;flex:none;image-rendering:pixelated;image-rendering:crisp-edges}
+.npc .say{font-size:15px}
+.npc .say b{font-family:var(--pix);font-size:12px;color:var(--blue);display:block;margin-bottom:3px;text-shadow:.4px 0 0 currentColor}
+.cushion{border-left:3px solid var(--red);background:#fff5f6;border-radius:0 6px 6px 0;
+  padding:14px 16px;font-size:14px;color:#7a2530;margin:16px 0;line-height:1.65}
+.btn{width:100%;border:3px solid var(--ink);border-radius:8px;padding:14px;cursor:pointer;
+  font-family:var(--pix);font-size:15px;text-shadow:.4px 0 0 currentColor;box-shadow:4px 4px 0 rgba(0,0,50,.15);transition:.1s}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 rgba(0,0,50,.15)}
+.btn.cta{background:var(--red);color:#fff;border-color:#c11a30}
+.btn.cta:disabled{background:#f3b8c1;border-color:#e8a3ae;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--blue)}
+.progress{display:flex;gap:6px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+.progress i{width:20px;height:8px;border-radius:4px;background:var(--line);display:block}
+.progress i.on{background:var(--blue)}
+/* 질문 블록 */
+.qblock{padding:22px 0}
+.qblock+.qblock{border-top:1px solid var(--line)}
+.qblock.na{opacity:.5}
+.qblock.invalid .scale{outline:2px solid var(--red);outline-offset:5px;border-radius:12px}
+.q{font-size:18px;font-weight:600;margin:0 0 18px}
+.scale{display:flex;justify-content:space-between;gap:6px}
+.scale button{flex:1;border:2px solid var(--line);border-radius:10px;background:#fff;padding:12px 0;font-size:26px;cursor:pointer;transition:.12s}
+.scale button:hover{border-color:var(--blue)}
+.scale button.on{border-color:var(--blue);background:#eef4ff;transform:translateY(-3px)}
+.scale button span{display:block;font-family:var(--pix);font-size:12px;color:var(--mut);margin-top:4px}
+.anchor{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-top:8px}
+textarea{width:100%;border:2px solid var(--line);border-radius:8px;padding:12px;font-family:var(--sans);font-size:15px;resize:vertical;min-height:74px;margin-top:8px}
+textarea:focus{outline:none;border-color:var(--blue)}
+.stagebox{margin-top:22px;padding:16px;border:2px dashed var(--line);border-radius:10px;background:var(--bg)}
+.stagebox label{font-size:15px;font-weight:600;display:block}
+.stagebox.invalid{border-color:var(--red)}
+.followup{margin-top:16px;display:none}
+.followup.show{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.followup label{font-size:15px;font-weight:600;display:block}
+.dunno{display:block;text-align:center;font-size:13px;color:var(--mut);margin-top:12px;text-decoration:underline;cursor:pointer;background:none;border:none;width:100%}
+.dunno.on{color:var(--blue);font-weight:700}
+.warn{color:var(--red);font-size:13px;font-weight:600;text-align:center;margin-top:14px}
+.nav{display:flex;gap:10px;margin-top:20px}
+.nav .btn{flex:1}
+.hide{display:none}
+.done{text-align:center;padding:40px 24px}
+.done .big{font-size:44px}
+.gift{border:2px dashed var(--red);border-radius:8px;padding:14px;margin-top:20px;font-size:14px;color:#7a2530}
+
+.choice{display:block;width:100%;text-align:left;background:#fff;border:2px solid var(--line);border-radius:10px;padding:13px;margin-top:8px;font:inherit;cursor:pointer}
+.choice.on{border-color:var(--blue);background:#eef4ff;color:var(--blue);font-weight:600}
+.qhint{color:var(--mut);font-size:13px;margin:-8px 0 14px}
+.qblock.invalid{outline:2px solid var(--red);outline-offset:5px;border-radius:8px}
+button:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+@media(max-width:400px){.card{padding:22px 16px}.anchor{font-size:12px}.scale button{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ── 인트로 ── -->
+  <section id="intro">
+    <p id="previewBanner" class="hide" style="text-align:center;color:var(--red);margin-bottom:12px">미리보기 · 응답은 저장되지 않습니다</p>
+    <div class="hero">
+      <span class="firefly" style="left:16%;top:28%"></span>
+      <span class="firefly" style="left:80%;top:60%;animation-delay:1.2s"></span>
+      <div class="wmark">RUSTIC TOWN · 삼기점</div>
+      <div class="htitle">뽀각캠프 리포트</div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">삼기점 뽀각캠프</div>
+      <h1 class="pix" style="margin-top:8px">소중한 이야기를 들려주세요</h1>
+      <p class="sub">이번 캠프를 되돌아보며 리포트를 남겨주세요.</p>
+      <div class="npc"><img class="face" src="https://sz-source.github.io/rustictown-feedback/townkeeper.png" alt="타운지기">
+        <div class="say"><b>타운지기</b>여러분이 어떻게 느끼셨는지 정말 궁금해요. 편하게, 솔직한 이야기를 들려주세요.</div></div>
+      <div class="cushion">🌱 러스틱타운 '삼기점'은 <b>이제 막 문을 연 지점</b>입니다. 아직 다듬어가는 중이라 아쉬운 부분이 있었을 텐데, <b>그 이야기까지 솔직하게</b> 들려주시면 더 좋은 경험이 될 수 있도록 반영할게요!</div>
+      <button class="btn cta" onclick="start()" style="margin-top:16px">리포트 작성하기</button>
+      <div class="meta">⏱ 약 5~7분 소요 &nbsp;|&nbsp; 🔒 익명 응답</div>
+    </div>
+  </section>
+
+  <!-- ── 문항 ── -->
+  <section id="quiz" class="hide">
+    <div class="progress" id="stamps"></div>
+    <div class="card">
+      <div class="stage-title" id="stageTitle"></div>
+      <div class="npc"><img class="face" src="https://sz-source.github.io/rustictown-feedback/townkeeper.png" alt="타운지기"><div class="say"><b>타운지기</b><span id="npcSay"></span></div></div>
+      <div id="questions"></div>
+      <div id="warn" class="warn hide"></div>
+      <div class="nav">
+        <button class="btn ghost" id="prevBtn" onclick="prev()">◀ 이전</button>
+        <button class="btn cta" id="nextBtn" onclick="next()">다음 ▶</button>
+      </div>
+    </div>
+    <div class="meta"><span id="stageNow">1</span> / <span id="stageTotal">5</span> · 🔒 익명</div>
+  </section>
+
+  <!-- ── 완료 ── -->
+  <section id="done" class="hide">
+    <div class="card done">
+      <div class="big">🎉</div>
+      <h1 class="pix" style="margin-top:10px">리포트가 완성됐어요</h1>
+      <p class="sub" style="margin-top:12px">여러분의 소중한 이야기가 잘 전달되었습니다.<br>더 나은 삼기점으로 보답하겠습니다.</p>
+      <p id="previewDone" class="hide" style="color:var(--mut)">미리보기 테스트입니다. 응답은 저장되지 않았어요.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyI2pRgA71k6EGTBpzFIInMq2PalhMu-T-gIbPqepFoeBKJWkm15kT8ZPsI0enlXTYj/exec";
+const params=new URLSearchParams(location.search);
+const PREVIEW=params.has('preview');
+const SHEET=params.has('test')?'뽀각테스트':'뽀각응답';
+const ROUND=(params.get('round')||'미지정').slice(0,60);
+const RESPONSE_ID=crypto.randomUUID();
+const EMO={1:'😭',2:'😕',3:'😐',4:'😊',5:'🤩'};
+const CONFIG = {
+  ppogak: { label:'뽀각캠프', stages:[
+    {title:'도착', npc:'삼기점에 처음 도착했을 때의 느낌, 기억나시나요?', questions:[
+      {id:'f_guide', col:'사전 안내', q:'도착 전 안내(오시는 길·셀프 체크인)는 충분했나요?', low:'부족했어요', high:'충분했어요'},
+      {id:'f_first', col:'첫인상', q:'도착했을 때 첫인상은 어땠나요?', low:'기대 이하', high:'기대 이상'},
+    ]},
+    {title:'머문 공간', npc:'머무신 공간들은 어떠셨나요?', questions:[
+      {id:'f_work',  col:'업무공간', q:'업무공간(몰입홀·협업홀·미팅룸·와이파이)은 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'f_stay',  col:'숙소', q:'숙소(침실·욕실·주방·세탁건조기)는 어땠나요?', low:'불편했어요', high:'최고였어요'},
+      {id:'f_share', col:'함께 쓰기', q:'다른 참가자와 한 채를 함께 쓴 생활은 괜찮았나요?', low:'불편했어요', high:'편했어요', na:'A타입(한 채 단독)이라 해당 없어요'},
+    ]},
+    {title:'생활과 경험', npc:'머무는 동안의 생활과 경험도 들려주세요.', questions:[
+      {id:'f_meal', col:'식사 해결', q:'식사 해결(숙소 주방·주변 식당·마트)은 편했나요?', low:'불편했어요', high:'편했어요'},
+      {id:'f_car',  col:'카셰어링', q:'카셰어링은 이용하기 편했나요?', low:'불편했어요', high:'편했어요', na:'이용하지 않았어요'},
+      {id:'f_help', col:'타운지기 도움', q:'필요할 때 타운지기의 도움을 받을 수 있었나요?', low:'어려웠어요', high:'바로 해결됐어요', na:'요청할 일이 없었어요'},
+      {id:'p_social', col:'자유 참여 시간', q:'불멍·비어타임 등 자유 참여 시간은 어땠나요?', low:'아쉬웠어요', high:'좋았어요', na:'참여하지 않았어요'},
+    ]},
+    {title:'이번 뽀각', npc:'완성 여부와 관계없이, 배우고 만들어 본 과정을 들려주세요.', questions:[
+      {id:'p_class', col:'강의 도움', q:'강의는 내 업무에 필요한 자동화 도구를 만드는 데 도움이 되었나요?', low:'도움이 되지 않았어요', high:'큰 도움이 됐어요', na:'강의에 참여하지 않았어요', hint:'문제 찾기(WHY), 해결 방법·설계도(HOW), 제작 방법(BUILD) 강의를 떠올려 주세요.'},
+      {id:'p_time', col:'실습 시간', q:'직접 만들고, 써보고, 고칠 시간은 충분했나요?', low:'많이 부족했어요', high:'충분했어요'},
+      {id:'p_mentor', col:'멘토링 도움', q:'막힌 부분을 해결하는 데 멘토링이 도움이 되었나요?', low:'도움이 되지 않았어요', high:'큰 도움이 됐어요', alternatives:['도움이 필요하지 않았어요','필요했지만 받지 못했어요'], hint:'실습 중 개별 도움과 나이트세션 보충반을 포함해 주세요.'},
+      {id:'p_result', type:'choice', col:'결과물 단계', q:'이번에 만들려던 자동화 도구는 어디까지 진행했나요?', options:['아직 해결할 문제를 정리하는 중이에요.','문제와 설계도를 정리했어요.','일부 기능을 만들었어요.','주요 기능을 만들고 시험해 봤어요.','실제 업무에 적용해 봤어요.']},
+      {id:'f_return', col:'재참여 의향', q:'다음에도 뽀각캠프에 참여하고 싶나요?', low:'다시 오긴 어려워요', high:'꼭 다시 올게요'},
+    ]},
+    {title:'전체 돌아보기', npc:'거의 다 왔어요! 마지막으로 전체를 돌아보며 한마디 남겨주세요.', questions:[
+      {id:'f_fix',  type:'text', required:true, col:'꼭 바뀌었으면', q:'이것만은 꼭 바뀌었으면 하는 점이 있다면?'},
+      {id:'f_msg',  type:'text', col:'전하고 싶은 말', q:'러스틱타운에게 전하고 싶은 말', ph:'가장 좋았던 순간, 고마웠던 점 등 무엇이든 좋아요.'},
+    ]},
+  ]},
+};
+
+
+let role='ppogak', stageIdx=0, ans={}, stageText={}, submitting=false;
+const EMBED=window.parent!==window;
+if(EMBED){document.body.style.minHeight='auto';const postH=()=>parent.postMessage({samgiH:document.body.scrollHeight+40},'*');new ResizeObserver(postH).observe(document.body);window.addEventListener('load',postH);}
+if(PREVIEW)document.getElementById('previewBanner').classList.remove('hide');
+function goTop(){if(EMBED)parent.postMessage({samgiTop:true},'*');window.scrollTo(0,0);}
+function esc(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function start(){stageIdx=0;document.getElementById('intro').classList.add('hide');document.getElementById('quiz').classList.remove('hide');renderStage();goTop();}
+function renderStage(){
+ const stages=CONFIG[role].stages,st=stages[stageIdx];
+ document.getElementById('stageTitle').textContent=st.title;
+ document.getElementById('npcSay').textContent=st.npc;
+ document.getElementById('stageNow').textContent=stageIdx+1;
+ document.getElementById('stageTotal').textContent=stages.length;
+ document.getElementById('stamps').innerHTML=stages.map((_,i)=>`<i class="${i<=stageIdx?'on':''}"></i>`).join('');
+ const c=document.getElementById('questions');c.innerHTML='';
+ st.questions.forEach(q=>{
+  const a=ans[q.id]||{},box=document.createElement('div');box.id='qb-'+q.id;box.className='qblock';
+  let html=`<div class="q" id="label-${q.id}">${esc(q.q)}${q.type==='text'&&!q.required?' <span style="font-size:13px;color:var(--mut)">(선택)</span>':''}</div>`;
+  if(q.hint)html+=`<p class="qhint">${esc(q.hint)}</p>`;
+  if(q.type==='text'){
+   html+=`<textarea aria-labelledby="label-${q.id}" placeholder="${esc(q.ph||(q.required?'꼭 한 가지만이라도 적어주세요.':'자유롭게 적어주세요.'))}" oninput="setText('${q.id}',this.value)">${esc(a.text||'')}</textarea>`;
+  }else if(q.type==='choice'){
+   html+=q.options.map((v,i)=>`<button class="choice ${a.choice===v?'on':''}" aria-pressed="${a.choice===v}" onclick="pickChoice('${q.id}',${i})">${esc(v)}</button>`).join('');
+  }else{
+   html+=`<div class="scale" role="group" aria-labelledby="label-${q.id}">${[1,2,3,4,5].map(v=>`<button aria-label="${v}점" aria-pressed="${a.score===v}" class="${a.score===v?'on':''}" onclick="pickScore('${q.id}',${v})">${EMO[v]}<span>${v}</span></button>`).join('')}</div><div class="anchor"><span>${esc(q.low)}</span><span>${esc(q.high)}</span></div>`;
+   html+=(q.alternatives||(q.na?[q.na]:[])).map((v,i)=>`<button class="dunno ${a.alternative===v?'on':''}" aria-pressed="${a.alternative===v}" onclick="pickAlternative('${q.id}',${i})">${a.alternative===v?'✓ ':''}${esc(v)}</button>`).join('');
+  }
+  box.innerHTML=html;c.appendChild(box);
+ });
+ if(st.questions.some(q=>!q.type||q.type==='choice')){
+  const sb=document.createElement('div');sb.className='stagebox';sb.id='stagebox';
+  const hint=stageIdx===3?'강의 설명·진행 속도·실습 시간·멘토링·중간 점검·결과 공유 등에서 떠올려 주세요.':'좋았던 점이나 작은 불편, 바라는 점도 좋아요.';
+  sb.innerHTML=`<label id="stageLabel" for="stageInput"></label><textarea id="stageInput" placeholder="${hint}" oninput="setStageText(this.value)">${esc(stageText[stageIdx]||'')}</textarea>`;c.appendChild(sb);updateStagePrompt();
+ }
+ document.getElementById('prevBtn').textContent=stageIdx===0?'◀ 처음으로':'◀ 이전';
+ document.getElementById('nextBtn').textContent=stageIdx===stages.length-1?'제출하기 ✅':'다음 ▶';clearWarn();
+}
+function question(id){return CONFIG[role].stages.flatMap(s=>s.questions).find(q=>q.id===id);}
+function preserveFocus(id){const y=window.scrollY;renderStage();window.scrollTo(0,y);const selected=document.querySelector('#qb-'+id+' [aria-pressed="true"]');if(selected)selected.focus({preventScroll:true});}
+function pickScore(id,v){ans[id]={score:v};preserveFocus(id);}
+function pickChoice(id,i){ans[id]={choice:question(id).options[i]};preserveFocus(id);}
+function pickAlternative(id,i){const q=question(id),v=(q.alternatives||[q.na])[i];ans[id]=ans[id]?.alternative===v?{}:{alternative:v};preserveFocus(id);}
+function setText(id,v){ans[id]={text:v};document.getElementById('qb-'+id).classList.remove('invalid');clearWarn();}
+function setStageText(v){stageText[stageIdx]=v;document.getElementById('stagebox').classList.remove('invalid');clearWarn();}
+function lowestItems(st){const qs=st.questions.filter(q=>!q.type&&ans[q.id]?.score);if(!qs.length)return {items:[],lo:null,allEqual:true};const lo=Math.min(...qs.map(q=>ans[q.id].score));const items=qs.filter(q=>ans[q.id].score===lo);return {items,lo,allEqual:items.length===qs.length&&qs.length>1};}
+function updateStagePrompt(){
+ const label=document.getElementById('stageLabel');if(!label)return;
+ const {items,lo,allEqual}=lowestItems(CONFIG[role].stages[stageIdx]);
+ if(!items.length){label.textContent=stageIdx===3?'💬 배우고 만드는 과정에서 특히 도움이 됐거나, 막혔던 부분을 알려주세요.':'💬 좋았던 점이나 아쉬웠던 점을 한 줄 남겨주세요.';return;}
+ const name=items.slice(0,2).map(q=>q.col).join('·');
+ label.textContent=allEqual?(lo>=4?'💬 특히 좋았던 점이나, 작은 바람이 있다면?':'💬 이 중 아쉬웠던 점이 있다면?'):(lo>=4?`💬 '${name}'에서 특히 좋았던 점이나, 바라는 점이 있다면? (다른 항목도 좋아요)`:`💬 '${name}'에 대해 아쉬웠던 점이 있다면? (다른 항목도 좋아요)`);
+}
+function validFeedbackText(value){const t=String(value||'').normalize('NFC').replace(/[\s\p{Cf}]/gu,'');return Array.from(t).length>5&&/[\p{L}\p{N}]/u.test(t);}
+function warn(msg){const w=document.getElementById('warn');w.textContent=msg;w.classList.remove('hide');}
+function clearWarn(){document.getElementById('warn').classList.add('hide');}
+function fail(id,msg){warn(msg);const el=document.getElementById(id);el.classList.add('invalid');el.scrollIntoView({block:'center',behavior:'smooth'});el.querySelector('button,textarea')?.focus({preventScroll:true});}
+function next(){
+ if(submitting)return;const st=CONFIG[role].stages[stageIdx];
+ for(const q of st.questions){const a=ans[q.id]||{};
+  if(q.type==='choice'&&!a.choice)return fail('qb-'+q.id,'응답을 선택해주세요 🙂');
+  if(!q.type&&!a.score&&!a.alternative)return fail('qb-'+q.id,'응답을 선택해주세요 🙂');
+ }
+ if(st.questions.some(q=>q.type!=='text')&&!validFeedbackText(stageText[stageIdx]))return fail('stagebox','짧게라도 의견을 적어주세요.');
+ for(const q of st.questions){const a=ans[q.id]||{};if(q.type==='text'&&(q.required||(a.text||'').trim())&&!validFeedbackText(a.text))return fail('qb-'+q.id,'짧게라도 의견을 적어주세요.');}
+ if(stageIdx===CONFIG[role].stages.length-1)submit();else{stageIdx++;renderStage();goTop();}
+}
+function prev(){if(submitting)return;clearWarn();if(stageIdx===0){document.getElementById('quiz').classList.add('hide');document.getElementById('intro').classList.remove('hide');}else{stageIdx--;renderStage();}goTop();}
+function buildPayload(){
+ const header=['제출시각','프로그램','기수','설문버전','응답ID'],row=[new Date().toISOString(),'뽀각캠프',ROUND,'ppogak-v1',RESPONSE_ID];
+ CONFIG[role].stages.forEach((st,i)=>{
+  st.questions.forEach(q=>{const a=ans[q.id]||{};if(q.type==='text'){header.push(q.col);row.push(a.text||'');}else if(q.type==='choice'){header.push(q.col);row.push(a.choice||'');}else{header.push(q.col+' 점수',q.col+' 응답구분');row.push(a.score||'',a.alternative||'점수 응답');}});
+  if(st.questions.some(q=>q.type!=='text')){header.push(st.title+' 의견');row.push(stageText[i]||'');}
+ });return {site:'삼기점',sheet:SHEET,header,row};
+}
+async function submit(){
+ if(submitting)return;submitting=true;
+ const btn=document.getElementById('nextBtn'),prev=document.getElementById('prevBtn');btn.disabled=true;prev.disabled=true;btn.textContent='제출 중…';
+ try{
+  if(!PREVIEW){const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),30000);try{const r=await fetch(ENDPOINT,{method:'POST',body:JSON.stringify(buildPayload()),signal:controller.signal});if(!r.ok||!(await r.json()).ok)throw Error('submit');}finally{clearTimeout(timer);}}
+  document.getElementById('quiz').classList.add('hide');document.getElementById('done').classList.remove('hide');
+  if(PREVIEW){document.getElementById('previewDone').classList.remove('hide');document.querySelector('#done h1').textContent='미리보기가 끝났어요';document.querySelector('#done .sub').textContent='실제 설문은 제출되지 않았습니다.';}goTop();
+ }catch(e){warn('전송을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.');btn.disabled=false;prev.disabled=false;btn.textContent='다시 제출하기 ▶';submitting=false;}
+}
+
+</script>
+</body>
+</html>
